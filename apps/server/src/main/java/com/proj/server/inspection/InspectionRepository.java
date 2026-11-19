@@ -10,6 +10,7 @@ import static com.proj.server.db.tables.Workorder.WORKORDER;
 
 import com.proj.server.db.tables.records.AssetinspectionresultRecord;
 import com.proj.server.db.tables.records.EstateRecord;
+import com.proj.server.estate.EstatePermissionCode;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -25,6 +26,11 @@ public class InspectionRepository {
 
     public InspectionRepository(DSLContext db) {
         this.db = db;
+    }
+
+    /** The permission codes {@code user} holds in the estate (estate-role-permissions). */
+    public java.util.Set<EstatePermissionCode> codes(UUID estate, String user) {
+        return com.proj.server.estate.EstatePermissions.effective(db, estate, user);
     }
 
     public EstateRecord estate(UUID estate, boolean lock) {

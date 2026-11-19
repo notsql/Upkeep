@@ -678,7 +678,8 @@ it("does not let a WorkOS admin claim bypass a missing report capability", async
   expect(managementLoader).not.toHaveBeenCalled();
 });
 
-const OWNER_GATED = [
+// Destinations gated by one access flag each (estate-role-permissions).
+const DESTINATION_GATED = [
   "/estates/oak/asset-categories",
   "/estates/oak/inspections",
   "/estates/oak/inspections/schedules",
@@ -689,12 +690,13 @@ const OWNER_GATED = [
 ];
 const managementOnly = {
   ...councilEstateAccess,
-  role: "MEMBER",
+  role: "COUNCIL",
   canViewManagement: true,
   canViewAssets: false,
   canViewInspectionResults: false,
   canManageEstate: false,
   canManageInvitationPermissions: false,
+  canViewDevices: false,
 };
 function estateAccess(
   estate: typeof managementOnly,
@@ -721,8 +723,8 @@ function estateAccess(
   });
 }
 
-it.each(OWNER_GATED)(
-  "404s %s for a management-only non-owner",
+it.each(DESTINATION_GATED)(
+  "404s %s for a member without its flag",
   async (path) => {
     estateAccess(managementOnly);
     const router = routerFor(path);
@@ -768,42 +770,40 @@ it.each([
   expect(managementLoader).not.toHaveBeenCalled();
 });
 
-it.each(OWNER_GATED)("404s %s when the owner lookup fails", async (path) => {
-  estateAccess(managementOnly, "error");
+it.each(DESTINATION_GATED)("404s %s on ownership alone", async (path) => {
+  estateAccess(managementOnly, true);
   const router = routerFor(path);
   await router.load();
   expect(managementLoader).not.toHaveBeenCalled();
+  expect(get).not.toHaveBeenCalledWith("/estates/{id}", expect.anything());
 });
 
 it.each([
-  ...OWNER_GATED.filter((path) => !path.endsWith("/assets")).map((path) => ({
-    path,
-    estate: managementOnly,
-    owned: true,
-  })),
   ...[
-    "/estates/oak/inspections",
+    "/estates/oak/asset-categories",
+    "/estates/oak/asset-categories/months",
     "/estates/oak/inspections/schedules",
     "/estates/oak/inspections/schedules/days",
   ].map((path) => ({
     path,
-    estate: { ...managementOnly, canManageInvitationPermissions: true },
-    owned: false,
+    estate: { ...managementOnly, canManageInspections: true },
   })),
+  {
+    path: "/estates/oak/inspections",
+    estate: { ...managementOnly, canViewInspectionResults: true },
+  },
   {
     path: "/estates/oak/edit",
     estate: { ...managementOnly, canManageEstate: true },
-    owned: false,
   },
   {
     path: "/estates/oak/assets",
     estate: { ...managementOnly, canViewAssets: true },
-    owned: false,
   },
 ])(
   "opens $path when its destination predicate holds",
-  async ({ path, estate, owned }) => {
-    estateAccess(estate, owned);
+  async ({ path, estate }) => {
+    estateAccess(estate);
     const router = routerFor(path);
     await router.load();
     renderWithProviders(<RouterProvider router={router} />);
@@ -811,24 +811,32 @@ it.each([
   }
 );
 
+// Crew can see Inspections and the due list, but not change check schedules.
+it.each([
+  "/estates/oak/inspections/schedules",
+  "/estates/oak/inspections/schedules/days",
+])("404s %s for someone who can only view inspections", async (path) => {
+  estateAccess({ ...managementOnly, canViewInspectionResults: true });
+  const router = routerFor(path);
+  await router.load();
+  expect(managementLoader).not.toHaveBeenCalled();
+});
+
 const ALL_DEVICES = "/estates/oak/assets/devices";
 
 it.each([
-  { name: "owner", estate: managementOnly, owned: true },
   {
     name: "Manager",
-    estate: { ...managementOnly, role: "MANAGER" },
-    owned: false,
+    estate: { ...managementOnly, role: "MANAGER", canViewDevices: true },
   },
   {
     name: "Council",
-    estate: { ...managementOnly, role: "COUNCIL" },
-    owned: false,
+    estate: { ...managementOnly, role: "COUNCIL", canViewDevices: true },
   },
 ])(
   "opens All devices for a $name without asset register access",
-  async ({ estate, owned }) => {
-    estateAccess(estate, owned);
+  async ({ estate }) => {
+    estateAccess(estate);
     const router = routerFor(ALL_DEVICES);
     await router.load();
     renderWithProviders(<RouterProvider router={router} />);
@@ -854,3 +862,31 @@ it("keeps a resident out of All devices", async () => {
   await router.load();
   expect(managementLoader).not.toHaveBeenCalled();
 });
+
+// An asset's Costs and Sensors tabs follow VIEW_COSTS and VIEW_DEVICES, so a
+// typed URL is not found like the hidden tab (estate-role-permissions).
+const ASSET_PATH = "/estates/pine/assets/7d0f3c1e-2b4a-4c6d-8e9f-0a1b2c3d4e5f";
+
+it.each([
+  ["costs", { canViewCosts: false }, true],
+  ["devices", { canViewDevices: false }, true],
+  ["costs", {}, false],
+  ["devices", {}, false],
+])(
+  "guards an asset's %s tab (%o): not found is %s",
+  async (tab, flags, hidden) => {
+    get.mockResolvedValue({
+      data: {
+        ...unassignedAccess,
+        canEnterWorkspace: true,
+        estates: [{ ...ownerEstateAccess, ...flags }],
+      },
+      response: new Response(),
+    });
+    const router = routerFor(`${ASSET_PATH}/${tab}`);
+    await router.load();
+    expect(
+      router.state.matches.some((match) => match.status === "notFound")
+    ).toBe(hidden);
+  }
+);

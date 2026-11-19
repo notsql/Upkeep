@@ -14,19 +14,19 @@ import org.junit.jupiter.params.provider.ValueSource;
 
 class AssetHistoryAccessIntegrationTests extends AssetHistoryTestSupport {
     @ParameterizedTest
-    @ValueSource(strings = {"owner", "member"})
-    void ownerAndCurrentCouncilCanReadTheTimelineAndBrowseAssets(String user) throws Exception {
+    @ValueSource(strings = {"owner", "manager", "member"})
+    void ownerManagersAndCurrentCouncilCanReadTheTimelineAndBrowseAssets(String user) throws Exception {
         page(user, history(assetId));
         var assets = page(user, historyAssets());
         assertEquals(List.of(assetId.toString()), values(assets.path("items"), "id"));
         read(user, get("/access/context"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath(ownEstate("canViewAssetHistory")).value(contains(true)))
-                .andExpect(jsonPath(ownEstate("canViewAssets")).value(contains(user.equals("owner"))));
+                .andExpect(jsonPath(ownEstate("canViewAssets")).value(contains(true)));
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"manager", "crew", "resident", "legacy-member"})
+    @ValueSource(strings = {"crew", "resident"})
     void unrelatedEstateRolesAndForgedProviderAdminClaimsDoNotGrantHistory(String user) throws Exception {
         read(user, get(history(assetId)))
                 .andExpect(status().isForbidden())
@@ -127,19 +127,20 @@ class AssetHistoryAccessIntegrationTests extends AssetHistoryTestSupport {
     @Test
     void councilHistoryDoesNotGrantPrivateScreensOrAssetDocumentInspectionAndWorkOrderWrites() throws Exception {
         page("member", history(assetId));
-        for (String suffix : List.of("", "/assessments", "/events")) {
-            read("member", get(path() + "/assets/" + assetId + suffix)).andExpect(status().isNotFound());
-        }
-        for (String suffix : List.of("/documents", "/inspections")) {
-            read("member", get(path() + "/assets/" + assetId + suffix)).andExpect(status().isForbidden());
-        }
+        read("member", get(path() + "/assets/" + assetId)).andExpect(status().isOk());
+        read("member", get(path() + "/assets/" + assetId + "/events")).andExpect(status().isOk());
+        // Council do not hold VIEW_READINGS (estate-role-permissions).
+        read("member", get(path() + "/assets/" + assetId + "/assessments")).andExpect(status().isForbidden());
+        // Council hold VIEW_ASSETS and VIEW_DOCUMENTS, but not VIEW_INSPECTIONS (estate-role-permissions).
+        read("member", get(path() + "/assets/" + assetId + "/documents")).andExpect(status().isOk());
+        read("member", get(path() + "/assets/" + assetId + "/inspections")).andExpect(status().isForbidden());
         UUID order = workOrder(estateId, assetId, locationId);
         read("member", get(path() + "/work-orders/" + order)).andExpect(status().isForbidden());
         send(
                         "member",
                         patch(path() + "/assets/" + assetId),
                         Map.of("name", "Changed", "locationId", locationId, "category", "PUMP"))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isOk()); // Council hold EDIT_ASSETS (estate-role-permissions).
         send(
                         "member",
                         post(path() + "/assets/" + assetId + "/deactivate"),
@@ -148,23 +149,24 @@ class AssetHistoryAccessIntegrationTests extends AssetHistoryTestSupport {
                                 "retiredOn", "2026-09-01",
                                 "retirementReason", "Worn",
                                 "expectedVersion", 0))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isOk());
         send(
                         "member",
                         post(path() + "/assets/" + assetId + "/assessments"),
                         Map.of("condition", "GOOD", "assessedOn", "2026-09-01", "notes", "Checked"))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isForbidden()); // Council do not hold RECORD_READINGS.
         send(
                         "member",
                         post(path() + "/assets/" + assetId + "/events"),
                         Map.of("type", "PREVENTIVE", "occurredOn", "2026-09-01", "notes", "Checked"))
-                .andExpect(status().isNotFound());
+                // Council hold EDIT_ASSETS, but the asset was retired above, so it takes no new events.
+                .andExpect(status().isConflict());
         UUID document = document("INVOICE", null, null, "2026-01-01T02:00:00Z");
         send(
                         "member",
                         put(path() + "/documents/" + document + "/asset"),
                         Map.of("assetId", assetId, "expectedAssociationVersion", 0))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isOk()); // Council hold EDIT_ASSETS (estate-role-permissions).
         send(
                         "member",
                         put(path() + "/work-orders/" + order + "/completion"),

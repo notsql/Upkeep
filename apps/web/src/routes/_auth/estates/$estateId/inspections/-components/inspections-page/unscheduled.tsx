@@ -9,9 +9,12 @@ import type { InspectionList } from "@/lib/inspection-list";
  * come due for them, so this is a warning with a way to fix it.
  */
 export function Unscheduled({
+  canManage,
   data,
   estateId,
 }: {
+  /** Can open Check schedules (MANAGE_INSPECTIONS). */
+  canManage: boolean;
   data: InspectionList;
   estateId: string;
 }) {
@@ -45,15 +48,17 @@ export function Unscheduled({
           </li>
         ))}
       </ul>
-      <p>
-        <Link
-          className="underline underline-offset-4"
-          params={{ estateId }}
-          to="/estates/$estateId/inspections/schedules"
-        >
-          Set check schedules
-        </Link>
-      </p>
+      {canManage ? (
+        <p>
+          <Link
+            className="underline underline-offset-4"
+            params={{ estateId }}
+            to="/estates/$estateId/inspections/schedules"
+          >
+            Set check schedules
+          </Link>
+        </p>
+      ) : null}
     </section>
   );
 }

@@ -227,62 +227,59 @@ class ResidentReportsIntegrationTests {
     }
 
     @Test
-    void aUserWithNoMembershipCanReadLocationsAndSubmitInAnyActiveEstate() throws Exception {
+    // Reporting needs a membership in the estate, of any role (estate-role-permissions; supersedes 0053).
+    void aUserWithNoMembershipCannotReadLocationsOrSubmit() throws Exception {
         var e = estate("UNASSIGNED", false);
         var block = location(e, "BLOCK", null, null, false);
         var level = location(e, "LEVEL", block, "BLOCK", false);
         mvc.perform(asUser(get("/resident/context"), "resident-a"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.estates").isEmpty())
-                .andExpect(jsonPath("$.canSubmit").value(true));
+                .andExpect(jsonPath("$.canSubmit").value(false));
         mvc.perform(asUser(get("/resident/locations").param("estateId", e.toString()), "resident-a"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[?(@.id == '" + level + "')].type").value(hasItem("LEVEL")));
-        mvc.perform(submission("resident-a", level, "Leaking pipe")).andExpect(status().isCreated());
-        assertEquals(
-                0L, db.fetchValue("select count(*) from \"EstateUser\" where \"userId\"='resident-a'", Long.class));
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message").value("Estate not found."));
+        mvc.perform(submission("resident-a", level, "Leaking pipe")).andExpect(status().isNotFound());
+        assertEquals(0L, (long) db.fetchCount(
+                org.jooq.impl.DSL.table("\"IssueReport\""),
+                org.jooq.impl.DSL.field("\"estateId\"").eq(e)));
     }
 
     @Test
-    void aStaffMemberOfOneEstateCanReportInAnotherWithoutGainingRightsThere() throws Exception {
+    void staffReportInTheirOwnEstateButNotInAnother() throws Exception {
         var home = estate("STAFFHOME", false);
         var other = estate("STAFFOTHER", false);
-        db.execute(
-                "insert into \"EstateUser\" (\"userId\", \"estateId\", role) values ('manager-a', ?, 'MANAGER')", home);
+        db.execute("insert into \"EstateUser\" (\"userId\", \"estateId\", role) values ('manager-a', ?, 'CREW')", home);
+        var homeBlock = location(home, "BLOCK", null, null, false);
+        var homeLevel = location(home, "LEVEL", homeBlock, "BLOCK", false);
         var block = location(other, "BLOCK", null, null, false);
         var level = location(other, "LEVEL", block, "BLOCK", false);
 
-        mvc.perform(submission("manager-a", level, "Lift stuck")).andExpect(status().isCreated());
-        assertEquals(
-                0L,
-                db.fetchValue(
-                        "select count(*) from \"EstateUser\" where \"userId\"='manager-a' and \"estateId\"=?", other));
+        mvc.perform(asUser(get("/resident/context"), "manager-a"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.estates[*].id").value(org.hamcrest.Matchers.contains(home.toString())))
+                .andExpect(jsonPath("$.canSubmit").value(true));
+        mvc.perform(submission("manager-a", homeLevel, "Lift stuck")).andExpect(status().isCreated());
+        mvc.perform(submission("manager-a", level, "Lift stuck")).andExpect(status().isNotFound());
     }
 
     @Test
-    void estateSearchFindsActiveEstatesByNameForAnySignedInUser() throws Exception {
-        var maple = estate("MAPLESEARCH", false);
-        estate("MAPLESEARCHGONE", true);
-        estate("OAKSEARCH", false);
-
-        mvc.perform(asUser(get("/resident/estates").param("q", "  maplesearch "), "visitor"))
+    void aResidentInOneEstateAndCrewInAnotherCanReportInBoth() throws Exception {
+        var a = estate("BOTHA", false);
+        var b = estate("BOTHB", false);
+        assign("resident-a", a);
+        db.execute("insert into \"EstateUser\" (\"userId\", \"estateId\", role) values ('resident-a', ?, 'CREW')", b);
+        mvc.perform(asUser(get("/resident/context"), "resident-a"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(1))
-                .andExpect(jsonPath("$[0].id").value(maple.toString()))
-                .andExpect(jsonPath("$[0].name").value("MAPLESEARCH Estate"));
-        mvc.perform(asUser(get("/resident/estates").param("q", " m "), "visitor"))
-                .andExpect(status().isBadRequest());
-        mvc.perform(get("/resident/estates").param("q", "maple")).andExpect(status().isUnauthorized());
+                .andExpect(jsonPath("$.estates.length()").value(2))
+                .andExpect(jsonPath("$.canSubmit").value(true));
     }
 
     @Test
-    void estateSearchReturnsAtMostTwentyEstatesOrderedByName() throws Exception {
-        for (var i = 0; i < 21; i++) estate("CAPPED" + String.format("%02d", 20 - i), false);
-
-        mvc.perform(asUser(get("/resident/estates").param("q", "capped"), "visitor"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(20))
-                .andExpect(jsonPath("$[0].name").value("CAPPED00 Estate"));
+    void thereIsNoSearchForEstatesYouDoNotBelongTo() throws Exception {
+        estate("MAPLESEARCH", false);
+        mvc.perform(asUser(get("/resident/estates").param("q", "maplesearch"), "visitor"))
+                .andExpect(status().isForbidden());
     }
 
     @Test
@@ -373,7 +370,7 @@ class ResidentReportsIntegrationTests {
         mvc.perform(asUser(get("/resident/context"), "resident-a"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.estates").isEmpty())
-                .andExpect(jsonPath("$.canSubmit").value(true));
+                .andExpect(jsonPath("$.canSubmit").value(false)); // No estate left to report in.
 
         mvc.perform(asUser(get("/resident/reports/" + oldReport), "resident-a"))
                 .andExpect(status().isOk())
@@ -381,7 +378,8 @@ class ResidentReportsIntegrationTests {
         mvc.perform(asUser(get("/resident/reports"), "resident-a"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.items[0].id").value(oldReport.toString()));
-        mvc.perform(submission("resident-a", level, "New report")).andExpect(status().isCreated());
+        // History stays readable, but a former member can no longer report there (estate-role-permissions).
+        mvc.perform(submission("resident-a", level, "New report")).andExpect(status().isNotFound());
     }
 
     @Test
@@ -575,7 +573,7 @@ class ResidentReportsIntegrationTests {
     }
 
     @Test
-    void anImageSlotIsATenMinuteSignedUploadForAnySignedInUserInAnActiveEstate() throws Exception {
+    void anImageSlotIsATenMinuteSignedUploadForMembersOfAnActiveEstate() throws Exception {
         var e = estate("SLOTS", false);
         assign("resident-a", e);
         var slot = mvc.perform(asUser(
@@ -600,7 +598,7 @@ class ResidentReportsIntegrationTests {
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content("{\"estateId\":\"" + e + "\",\"contentType\":\"image/png\",\"size\":1000}"),
                         "resident-b"))
-                .andExpect(status().isCreated());
+                .andExpect(status().isNotFound()); // resident-b does not belong to the estate (estate-role-permissions)
         mvc.perform(asUser(
                         post("/resident/reports/image-slots")
                                 .contentType(MediaType.APPLICATION_JSON)
@@ -667,7 +665,7 @@ class ResidentReportsIntegrationTests {
     }
 
     @Test
-    void anyWorkosRoleCanSubmitWithoutADatabaseMembership() throws Exception {
+    void noWorkosRoleCanSubmitWithoutADatabaseMembership() throws Exception {
         var e = estate("CLAIM", false);
         var block = location(e, "BLOCK", null, null, false);
         var level = location(e, "LEVEL", block, "BLOCK", false);
@@ -679,9 +677,11 @@ class ResidentReportsIntegrationTests {
                     .param("estateId", e.toString());
             request.with(jwt().jwt(token -> token.subject("unassigned").claim("role", role))
                     .authorities(new SimpleGrantedAuthority("ROLE_" + role)));
-            mvc.perform(request).andExpect(status().isCreated());
+            mvc.perform(request).andExpect(status().isNotFound());
         }
-        assertEquals(3L, db.fetchValue("select count(*) from \"IssueReport\"", Long.class));
+        assertEquals(0L, (long) db.fetchCount(
+                org.jooq.impl.DSL.table("\"IssueReport\""),
+                org.jooq.impl.DSL.field("\"estateId\"").eq(e)));
     }
 
     @Test
@@ -693,7 +693,7 @@ class ResidentReportsIntegrationTests {
         mvc.perform(asUser(get("/resident/context"), "resident-a"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.estates").isEmpty())
-                .andExpect(jsonPath("$.canSubmit").value(true));
+                .andExpect(jsonPath("$.canSubmit").value(false));
         mvc.perform(asUser(get("/resident/locations").param("estateId", e.toString()), "resident-a"))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.message").value("Estate not found."));
@@ -708,7 +708,7 @@ class ResidentReportsIntegrationTests {
     }
 
     @Test
-    void deletingTheMembershipNoLongerStopsSubmissions() throws Exception {
+    void deletingTheMembershipStopsSubmissions() throws Exception {
         var e = estate("TOKEN", false);
         var block = location(e, "BLOCK", null, null, false);
         var level = location(e, "LEVEL", block, "BLOCK", false);
@@ -739,7 +739,7 @@ class ResidentReportsIntegrationTests {
                         .param("locationId", level.toString())
                         .param("estateId", e.toString())
                         .with(token))
-                .andExpect(status().isCreated());
+                .andExpect(status().isNotFound());
     }
 
     @Test

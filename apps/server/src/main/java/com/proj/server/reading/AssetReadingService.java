@@ -2,6 +2,7 @@ package com.proj.server.reading;
 
 import com.proj.server.asset.AssetRepository;
 import com.proj.server.device.DeviceMetric;
+import com.proj.server.estate.EstatePermissionCode;
 import com.proj.server.estate.EstateRepository;
 import java.time.OffsetDateTime;
 import java.util.Set;
@@ -44,8 +45,7 @@ public class AssetReadingService {
         if (from != null && to != null && !from.isBefore(to)) {
             throw badRequest("from: must be before to.");
         }
-        estates.findOwned(estateId, owner, false)
-                .orElseThrow(() -> new ReadingException(HttpStatus.NOT_FOUND, "Estate not found."));
+        estates.require(estateId, owner, EstatePermissionCode.VIEW_READINGS, false);
         assets.find(assetId, estateId, false)
                 .orElseThrow(() -> new ReadingException(HttpStatus.NOT_FOUND, "Asset not found."));
         return new AssetReadingPage(

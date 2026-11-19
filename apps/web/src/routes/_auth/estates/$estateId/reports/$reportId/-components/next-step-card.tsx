@@ -137,7 +137,8 @@ function Body({
   reportId: string;
   routing: ReportRouting;
 }) {
-  const { canManage } = useRoutingAccess(estateId);
+  const { canManage, canTriage } = useRoutingAccess(estateId);
+  const decides = canManage || canTriage;
   if (routing.state === "CLASSIFYING") {
     return (
       <>
@@ -175,7 +176,7 @@ function Body({
   return (
     <>
       <p className="font-medium">
-        {canManage ? "Waiting for you to decide" : "Waiting for a manager"}
+        {decides ? "Waiting for you to decide" : "Waiting for a manager"}
       </p>
       {routing.reason ? (
         <Reason
@@ -184,15 +185,19 @@ function Body({
           reason={routing.reason}
         />
       ) : null}
-      {canManage ? (
+      {decides ? (
         <div className="flex flex-wrap gap-2">
-          <SendToContractorDialog
-            estateId={estateId}
-            key={suggested ?? "none"}
-            reportId={reportId}
-            suggested={suggested}
-          />
-          <DismissReportDialog estateId={estateId} reportId={reportId} />
+          {canManage ? (
+            <SendToContractorDialog
+              estateId={estateId}
+              key={suggested ?? "none"}
+              reportId={reportId}
+              suggested={suggested}
+            />
+          ) : null}
+          {canTriage ? (
+            <DismissReportDialog estateId={estateId} reportId={reportId} />
+          ) : null}
         </div>
       ) : null}
     </>

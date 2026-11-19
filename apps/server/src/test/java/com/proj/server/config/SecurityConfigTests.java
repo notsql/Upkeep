@@ -84,12 +84,11 @@ class SecurityConfigTests {
     }
 
     @Test
-    void estateSearchIsOpenToAnySignedInUser() throws Exception {
-        mockMvc.perform(get("/resident/estates").param("q", "maple")).andExpect(status().isUnauthorized());
+    void theRemovedEstateSearchIsDenied() throws Exception {
         mockMvc.perform(get("/resident/estates")
                         .param("q", "maple")
                         .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_user"))))
-                .andExpect(status().isOk());
+                .andExpect(status().isForbidden());
     }
 
     @Test

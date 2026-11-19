@@ -5,6 +5,7 @@ import static com.proj.server.db.tables.Estateroledefinition.ESTATEROLEDEFINITIO
 import static com.proj.server.db.tables.Estaterolepermission.ESTATEROLEPERMISSION;
 import static com.proj.server.db.tables.Estateuser.ESTATEUSER;
 import static com.proj.server.db.tables.Permission.PERMISSION;
+import static com.proj.server.db.tables.Presetrolepermission.PRESETROLEPERMISSION;
 import static org.jooq.impl.DSL.*;
 
 import com.proj.server.db.tables.records.EstateRecord;
@@ -67,6 +68,53 @@ public final class EstatePermissions {
         return db.fetchExists(ESTATE, ESTATE.ID.eq(estate).and(customEstates(user, permission)));
     }
 
+    /**
+     * Every code the user holds in the estate: all of them for its owner, the seeded bundle for a built-in role, the
+     * current grants for a custom role, and none for a Resident or non-member. A same-estate Resident row fails closed,
+     * even for the owner (decision 0027).
+     */
+    public static Set<EstatePermissionCode> effective(DSLContext db, UUID estate, String user) {
+        var row = db.select(ESTATE.OWNERUSERID, ESTATEUSER.ROLE, ESTATEUSER.CUSTOMROLEID)
+                .from(ESTATE)
+                .leftJoin(ESTATEUSER)
+                .on(ESTATEUSER.ESTATEID.eq(ESTATE.ID).and(ESTATEUSER.USERID.eq(user)))
+                .where(ESTATE.ID.eq(estate))
+                .fetchOne();
+        if (row == null) return Set.of();
+        String role = row.get(ESTATEUSER.ROLE);
+        if ("RESIDENT".equals(role)) return Set.of();
+        if (user.equals(row.get(ESTATE.OWNERUSERID))) return Set.copyOf(EnumSet.allOf(EstatePermissionCode.class));
+        if ("CUSTOM".equals(role)) return grants(db, row.get(ESTATEUSER.CUSTOMROLEID), estate);
+        return preset(db, role);
+    }
+
+    /**
+     * The estate, once the user is shown to hold {@code code} there: 404 when the estate is missing or the user has no
+     * relationship with it, 403 when they belong but lack the code. {@code lock} takes the estate row for update.
+     */
+    public static EstateRecord require(
+            DSLContext db, UUID estateId, String user, EstatePermissionCode code, boolean lock) {
+        var query = db.selectFrom(ESTATE).where(ESTATE.ID.eq(estateId));
+        EstateRecord estate = lock ? query.forUpdate().fetchOne() : query.fetchOne();
+        boolean related = estate != null
+                && (user.equals(estate.getOwneruserid())
+                        || db.fetchExists(
+                                ESTATEUSER, ESTATEUSER.ESTATEID.eq(estateId).and(ESTATEUSER.USERID.eq(user))));
+        if (!related) throw error(HttpStatus.NOT_FOUND, "Estate not found.");
+        if (!effective(db, estateId, user).contains(code))
+            throw error(HttpStatus.FORBIDDEN, "This estate permission is required: " + code.name());
+        return estate;
+    }
+
+    /** A built-in role's seeded bundle; an unknown role, or a bundle with an unsupported code, holds nothing. */
+    static Set<EstatePermissionCode> preset(DSLContext db, String role) {
+        if (role == null) return Set.of();
+        return validatedGrants(db.select(PRESETROLEPERMISSION.PERMISSION)
+                .from(PRESETROLEPERMISSION)
+                .where(PRESETROLEPERMISSION.ROLE.eq(role))
+                .fetch(PRESETROLEPERMISSION.PERMISSION));
+    }
+
     public static Set<EstatePermissionCode> grants(DSLContext db, UUID role, UUID estate) {
         if (role == null
                 || !db.fetchExists(
@@ -107,8 +155,8 @@ public final class EstatePermissions {
         boolean manager = !"RESIDENT".equals(role) && (user.equals(estate.getOwneruserid()) || "MANAGER".equals(role));
         if (!manager && member == null) throw error(HttpStatus.NOT_FOUND, "Estate not found.");
         var customId = member == null ? null : member.getCustomroleid();
-        var grants = "CUSTOM".equals(role) ? grants(db, customId, estateId) : Set.<EstatePermissionCode>of();
-        return new Authority(estate, role, customId, manager, grants);
+        // Every code the user holds here: built-in bundle, custom grants, or all of them for the owner.
+        return new Authority(estate, role, customId, manager, effective(db, estateId, user));
     }
 
     public record Authority(
@@ -117,11 +165,9 @@ public final class EstatePermissions {
             UUID customRoleId,
             boolean manager,
             Set<EstatePermissionCode> permissions) {
+        /** Whether the user holds the code here (estate-role-permissions); no role-name shortcuts. */
         public boolean has(EstatePermissionCode permission) {
-            boolean presetDocuments = (permission == EstatePermissionCode.VIEW_DOCUMENTS
-                            || permission == EstatePermissionCode.EDIT_DOCUMENTS)
-                    && ("COUNCIL".equals(role) || "CREW".equals(role));
-            return manager || presetDocuments || permissions.contains(permission);
+            return permissions.contains(permission);
         }
 
         public boolean active() {

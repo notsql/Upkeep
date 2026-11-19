@@ -14,5 +14,7 @@ export function useAssetDetailsLayout(estateId: string, assetId: string) {
   const canInspect = active && inspections.canCreate;
   // Sending crew or a contractor needs the same access as creating work orders.
   const canSend = active && workOrders.canCreate;
-  return { active, asset, canInspect, canSend, retry };
+  // The banner reads assessments, which need VIEW_READINGS (estate-role-permissions).
+  const canViewCondition = inspections.canViewReadings;
+  return { active, asset, canInspect, canSend, canViewCondition, retry };
 }

@@ -29,12 +29,8 @@ public class AssetHistoryService {
     }
 
     private EstatePermissions.Authority authority(UUID estate, String user) {
-        var access = EstatePermissions.authority(db, estate, user, false);
-        if ("RESIDENT".equals(access.role())
-                || !(user.equals(access.estate().getOwneruserid()) || "COUNCIL".equals(access.role())))
-            throw new ResponseStatusException(
-                    HttpStatus.FORBIDDEN, "Owner or Council access is required to read asset history.");
-        return access;
+        EstatePermissions.require(db, estate, user, EstatePermissionCode.VIEW_ASSETS, false);
+        return EstatePermissions.authority(db, estate, user, false);
     }
 
     public AssetHistoryAssetPageResponse assets(
@@ -119,7 +115,7 @@ public class AssetHistoryService {
                     last.id().toString());
         }
         boolean sourceLinks =
-                !"RESIDENT".equals(access.role()) && user.equals(access.estate().getOwneruserid());
+                EstatePermissions.effective(db, estate, user).contains(EstatePermissionCode.VIEW_WORK_ORDERS);
         return new AssetHistoryPageResponse(summary, repository.entries(estate, page, sourceLinks), next, documents);
     }
 

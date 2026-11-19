@@ -25,7 +25,6 @@ const roleLabels: Record<string, string> = {
   MANAGER: "Manager",
   CREW: "Crew",
   COUNCIL: "Council",
-  MEMBER: "Member",
   RESIDENT: "Resident",
 };
 

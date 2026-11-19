@@ -12,6 +12,11 @@ const page = vi.hoisted(() => ({
   asset: {} as Record<string, unknown>,
   role: "MANAGER",
   canCreateInspectionResults: true,
+  // Flags an owner or Manager holds (estate-role-permissions).
+  canViewDevices: true,
+  canViewCosts: true,
+  canEditAssets: true,
+  canManageInspections: true,
   devices: [] as { id: string; status: string; deactivatedAt?: string }[],
   devicesEnabled: [] as boolean[],
 }));
@@ -27,6 +32,10 @@ beforeEach(() => {
   };
   page.role = "MANAGER";
   page.canCreateInspectionResults = true;
+  page.canViewDevices = true;
+  page.canViewCosts = true;
+  page.canEditAssets = true;
+  page.canManageInspections = true;
   page.devices = [
     { id: "d1", status: "ONLINE" },
     { id: "d2", status: "OFFLINE" },
@@ -99,6 +108,10 @@ vi.mock("@/lib/access", async (importOriginal) => ({
           role: page.role,
           canViewAssets: true,
           canCreateInspectionResults: page.canCreateInspectionResults,
+          canViewDevices: page.canViewDevices,
+          canViewCosts: page.canViewCosts,
+          canEditAssets: page.canEditAssets,
+          canManageInspections: page.canManageInspections,
         },
       ],
     },
@@ -137,6 +150,14 @@ vi.mock(
   () => ({ AssetDevicesSection: () => null })
 );
 
+vi.mock(
+  "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-maintenance/asset-maintenance-section/asset-maintenance-section",
+  () => ({
+    AssetMaintenanceSection: ({ canRecord }: { canRecord: boolean }) => (
+      <output>{canRecord ? "Maintenance (can record)" : "Maintenance"}</output>
+    ),
+  })
+);
 vi.mock(
   "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-maintenance/asset-service-interval-card",
   () => ({
@@ -205,14 +226,27 @@ it("hides the device count when the asset has no active devices", () => {
   nav.getByRole("link", { name: "Sensors" });
 });
 
-it("neither counts nor requests devices for a viewer who cannot see them", () => {
+// A tab the viewer cannot open is not offered (estate-role-permissions):
+// Sensors follow VIEW_DEVICES and Costs VIEW_COSTS.
+it("neither offers nor requests devices for a viewer who cannot see them", () => {
   page.role = "CREW";
+  page.canViewDevices = false;
   renderLayout();
   const nav = within(
     screen.getByRole("navigation", { name: "Asset sections" })
   );
-  nav.getByRole("link", { name: "Sensors" });
+  expect(nav.queryByRole("link", { name: "Sensors" })).toBeNull();
   expect(page.devicesEnabled.every((enabled) => !enabled)).toBe(true);
+});
+
+it("offers no Costs tab to a viewer who cannot see costs", () => {
+  page.canViewCosts = false;
+  renderLayout();
+  const nav = within(
+    screen.getByRole("navigation", { name: "Asset sections" })
+  );
+  nav.getByRole("link", { name: "Records" });
+  expect(nav.queryByRole("link", { name: "Costs" })).toBeNull();
 });
 
 it("keeps only the title, status and reference in the header", () => {
@@ -264,15 +298,31 @@ it("shows the asset's details on the overview", () => {
   expect(screen.queryByRole("region", { name: "Details" })).toBeNull();
 });
 
+// Changing a service interval needs MANAGE_INSPECTIONS (estate-role-permissions).
 it.each([
-  [{ owned: true }, true],
-  [{ owned: false, canManageInvitationPermissions: true }, true],
-  [{ owned: false, canManageInvitationPermissions: false }, false],
-])("shows the service interval to Managers only (%o)", (access, shown) => {
-  page.estate = { ...page.estate, ...access };
-  renderWithProviders(<AssetMaintenance assetId="asset" estateId="estate" />);
-  expect(screen.queryByText("Service interval card") !== null).toBe(shown);
-});
+  [true, true],
+  [false, false],
+])(
+  "shows the service interval card when canManageInspections is %s",
+  (flag, shown) => {
+    page.canManageInspections = flag;
+    renderWithProviders(<AssetMaintenance assetId="asset" estateId="estate" />);
+    expect(screen.queryByText("Service interval card") !== null).toBe(shown);
+  }
+);
+
+// Recording maintenance needs EDIT_ASSETS (estate-role-permissions).
+it.each([
+  [true, "Maintenance (can record)"],
+  [false, "Maintenance"],
+])(
+  "lets someone record maintenance only when canEditAssets is %s",
+  (flag, text) => {
+    page.canEditAssets = flag;
+    renderWithProviders(<AssetMaintenance assetId="asset" estateId="estate" />);
+    screen.getByText(text);
+  }
+);
 
 it.each([
   [
@@ -287,7 +337,7 @@ it.each([
   ],
 ])("locks the service interval with a reason", (asset, estate, reason) => {
   page.asset = { ...page.asset, ...asset };
-  page.estate = { ...page.estate, owned: true, ...estate };
+  page.estate = { ...page.estate, ...estate };
   renderWithProviders(<AssetMaintenance assetId="asset" estateId="estate" />);
   screen.getByText(`Service interval card: ${reason}`);
 });

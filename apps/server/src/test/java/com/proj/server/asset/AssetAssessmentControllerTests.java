@@ -1,6 +1,7 @@
 package com.proj.server.asset;
 
 import static org.hamcrest.Matchers.nullValue;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
@@ -13,6 +14,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.proj.server.config.SecurityConfig;
 import com.proj.server.db.tables.records.AssetRecord;
 import com.proj.server.db.tables.records.AssetassessmentRecord;
+import com.proj.server.estate.EstatePermissionCode;
 import com.proj.server.estate.EstateRepository;
 import com.proj.server.estate.EstateResponse;
 import com.proj.server.workos.WorkOSService;
@@ -28,11 +30,13 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
+import org.springframework.web.server.ResponseStatusException;
 
 @WebMvcTest(
         controllers = AssetAssessmentController.class,
@@ -107,8 +111,9 @@ class AssetAssessmentControllerTests {
 
     @BeforeEach
     void setup() {
-        when(estates.findOwned(estateId, "owner", false)).thenReturn(Optional.of(estate(null)));
-        when(estates.findOwned(estateId, "owner", true)).thenReturn(Optional.of(estate(null)));
+        when(estates.require(eq(estateId), eq("owner"), any(), anyBoolean())).thenReturn(estate(null));
+        when(estates.require(eq(estateId), eq("other"), any(), anyBoolean()))
+                .thenThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "Estate not found."));
         when(assets.find(assetId, estateId, false)).thenReturn(Optional.of(asset(null)));
         when(assets.find(assetId, estateId, true)).thenReturn(Optional.of(asset(null)));
         when(workOS.findDisplayName("owner")).thenReturn(Optional.of("Casey Doe"));
@@ -244,7 +249,8 @@ class AssetAssessmentControllerTests {
 
     @Test
     void rejectsAssessmentsInAnInactiveEstate() throws Exception {
-        when(estates.findOwned(estateId, "owner", true)).thenReturn(Optional.of(estate(now)));
+        when(estates.require(eq(estateId), eq("owner"), eq(EstatePermissionCode.RECORD_READINGS), eq(true)))
+                .thenReturn(estate(now));
         mvc.perform(record(body("GOOD", LocalDate.parse("2026-09-01"), "Fine"))).andExpect(status().isConflict());
         verify(repository, never()).create(any(), any(), any(), any(), any());
     }

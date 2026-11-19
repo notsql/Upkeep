@@ -1,7 +1,19 @@
 import { SubNav } from "@/components/page/sub-nav";
 
-/** Tabs shared by Due checks (`/inspections`) and Check schedules. */
-export function InspectionViews({ estateId }: { estateId: string }) {
+/**
+ * Tabs shared by Due checks (`/inspections`) and Check schedules. Hidden from
+ * viewers who cannot open Check schedules: one tab alone switches to nothing.
+ */
+export function InspectionViews({
+  estateId,
+  schedules,
+}: {
+  estateId: string;
+  schedules: boolean;
+}) {
+  if (!schedules) {
+    return null;
+  }
   return (
     <SubNav
       items={[

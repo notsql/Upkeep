@@ -97,11 +97,15 @@ export function assessmentsQueryKey(
 }
 
 /** Current condition first: the API orders by assessment date, then recording time. */
-export function useAssessments(estateId: string, assetId: string) {
+export function useAssessments(
+  estateId: string,
+  assetId: string,
+  enabled = true
+) {
   const { userId, ready } = useEstateSession();
   return useQuery({
     queryKey: assessmentsQueryKey(userId, estateId, assetId),
-    enabled: ready,
+    enabled: ready && enabled,
     retry: false,
     queryFn: async () => {
       const { data, error, response } = await api.GET(

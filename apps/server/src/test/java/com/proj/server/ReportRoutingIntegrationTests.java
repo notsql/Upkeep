@@ -191,7 +191,7 @@ class ReportRoutingIntegrationTests {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"COUNCIL", "RESIDENT", "MEMBER"})
+    @ValueSource(strings = {"COUNCIL", "RESIDENT"})
     void otherRolesCannotReadContractors(String role) throws Exception {
         var estate = estate();
         member(estate, "staff", role);
@@ -538,10 +538,11 @@ class ReportRoutingIntegrationTests {
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content("{\"equipmentType\":\"LIFT\",\"priority\":\"MEDIUM\"}")))
                 .andExpect(status().isForbidden());
-        mvc.perform(as("crew", post(detail(estate, review) + "/dismiss"))).andExpect(status().isForbidden());
         mvc.perform(as("crew", post(workOrders(estate) + "/" + order + "/dispatch/retry")))
                 .andExpect(status().isForbidden());
         assertEquals("NEEDS_REVIEW", routing(review).get("state"));
+        // Dismissing is triage, which Crew hold (estate-role-permissions); sending and retrying stay with Managers.
+        mvc.perform(as("crew", post(detail(estate, review) + "/dismiss"))).andExpect(status().isOk());
     }
 
     @Test
@@ -674,7 +675,7 @@ class ReportRoutingIntegrationTests {
     @Test
     void changingTheCategoryIsRefusedWhenItCannotApply() throws Exception {
         var estate = estate();
-        member(estate, "crew", "CREW");
+        member(estate, "council", "COUNCIL");
         var review = reviewReport(estate);
         var classifying = queuedReport(estate);
         var foreign = reviewReport(estate());
@@ -683,11 +684,11 @@ class ReportRoutingIntegrationTests {
         mvc.perform(changeCategory(estate, foreign, "WATER_LEAK")).andExpect(status().isNotFound());
         mvc.perform(changeCategory(estate, review, "ESCALATOR")).andExpect(status().isBadRequest());
         mvc.perform(as(
-                        "crew",
+                        "council",
                         put(detail(estate, review) + "/category")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content("{\"category\":\"WATER_LEAK\"}")))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isForbidden()); // Council lack TRIAGE_FAULT_REPORTS.
         db.execute("update \"Estate\" set \"deactivatedAt\"=now() where id=?", estate);
         mvc.perform(changeCategory(estate, review, "WATER_LEAK")).andExpect(status().isConflict());
         assertEquals(0, count("ReportClassification", review, "reportId"));

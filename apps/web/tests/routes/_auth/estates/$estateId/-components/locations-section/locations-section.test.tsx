@@ -55,7 +55,6 @@ function serve(
   options: {
     deactivatedAt?: string;
     items?: Location[];
-    owned?: boolean;
     role?: string;
     assignmentId?: string;
     accessState?: "loading" | "error";
@@ -72,26 +71,27 @@ function serve(
           response: new Response(null, { status: 503 }),
         });
       }
+      // Every Manager, the owner included, holds CREATE_LOCATIONS and
+      // EDIT_LOCATIONS (estate-role-permissions); other roles hold neither.
+      const role = options.role ?? "MANAGER";
+      const canChangeLocations = role === "MANAGER" && !options.deactivatedAt;
       return Promise.resolve({
         data: {
           ...unassignedAccess,
-          estates: options.role
-            ? [
-                {
-                  ...ownerEstateAccess,
-                  role: options.role,
-                  estateId: options.assignmentId ?? estate.id,
-                  canManageEstate: options.role === "MANAGER",
-                  canCreateLocations:
-                    !options.deactivatedAt &&
-                    ((options.owned ?? true) || options.role === "MANAGER"),
-                  canCreateFloors:
-                    !options.deactivatedAt && (options.owned ?? true),
-                  canEditLocations:
-                    !options.deactivatedAt && (options.owned ?? true),
-                },
-              ]
-            : [],
+          estates:
+            role === "unassigned"
+              ? []
+              : [
+                  {
+                    ...ownerEstateAccess,
+                    role,
+                    estateId: options.assignmentId ?? estate.id,
+                    canManageEstate: role === "MANAGER",
+                    canCreateLocations: canChangeLocations,
+                    canCreateFloors: canChangeLocations,
+                    canEditLocations: canChangeLocations,
+                  },
+                ],
         },
         response: new Response(),
       });
@@ -101,7 +101,6 @@ function serve(
         url === "/estates/{id}"
           ? {
               ...estate,
-              owned: options.owned ?? true,
               deactivatedAt: options.deactivatedAt,
             }
           : (options.items ?? locations),
@@ -132,14 +131,14 @@ describe("locations section", () => {
   });
 
   it.each([
+    // Managers add levels through the owner's floor-range flow, tested below.
     ["BLOCK", undefined, "Add block"],
-    ["LEVEL", "Blk 101", "Add level to Blk 101"],
     ["COMMON_AREA", "Blk 101", "Add common area to Blk 101"],
     ["COMMON_AREA", "Level 2", "Add common area to Level 2"],
   ] as const)(
     "lets an assigned Manager create %s using %s",
     async (type, parent, action) => {
-      serve({ owned: false, role: "MANAGER" });
+      serve({ role: "MANAGER" });
       succeed("POST");
       renderWithProviders(<LocationsSection estateId={estate.id} />);
       await showTree();
@@ -157,7 +156,6 @@ describe("locations section", () => {
         type,
         name: "New location",
         ...(parent ? { parentId: parent === "Level 2" ? "l2" : "b1" } : {}),
-        ...(type === "LEVEL" ? { sortOrder: 3 } : {}),
       };
       await waitFor(() =>
         expect(api.POST).toHaveBeenCalledWith("/estates/{estateId}/locations", {
@@ -169,23 +167,19 @@ describe("locations section", () => {
     }
   );
 
-  it("keeps location editing and deactivation hidden from assigned Managers", async () => {
-    serve({ owned: false, role: "MANAGER" });
+  // Every Manager edits and deactivates locations like the owner (estate-role-permissions).
+  it("lets assigned Managers edit and deactivate locations", async () => {
+    serve({ role: "MANAGER" });
     renderWithProviders(<LocationsSection estateId={estate.id} />);
     fireEvent.click(
       await screen.findByRole("button", { name: "Actions for Blk 101" })
     );
-    await screen.findByRole("menuitem", { name: "Add level to Blk 101" });
-    screen.getByRole("menuitem", { name: "Add common area to Blk 101" });
-    expect(screen.queryByRole("menuitem", { name: "Edit Blk 101" })).toBeNull();
-    expect(
-      screen.queryByRole("menuitem", { name: "Deactivate Blk 101" })
-    ).toBeNull();
+    await screen.findByRole("menuitem", { name: "Edit Blk 101" });
+    screen.getByRole("menuitem", { name: "Deactivate Blk 101" });
   });
 
   it.each([
     "COUNCIL",
-    "MEMBER",
     "CREW",
     "RESIDENT",
     "unassigned",
@@ -193,7 +187,6 @@ describe("locations section", () => {
     "inactive Manager",
   ])("hides creation controls for %s", async (role) => {
     serve({
-      owned: false,
       role: role.includes("Manager") ? "MANAGER" : role,
       assignmentId: role === "other-estate Manager" ? "other" : estate.id,
       deactivatedAt: role === "inactive Manager" ? at : undefined,
@@ -206,7 +199,7 @@ describe("locations section", () => {
   });
 
   it("closes a Manager's create dialog when their permission is revoked", async () => {
-    serve({ owned: false, role: "MANAGER" });
+    serve({ role: "MANAGER" });
     const { queryClient } = renderWithProviders(
       <LocationsSection estateId={estate.id} />
     );
@@ -221,7 +214,7 @@ describe("locations section", () => {
   it.each(["loading", "error"] as const)(
     "hides non-owner creation controls when permissions are %s",
     async (accessState) => {
-      serve({ owned: false, role: "MANAGER", accessState });
+      serve({ role: "MANAGER", accessState });
       renderWithProviders(<LocationsSection estateId={estate.id} />);
       await showTree();
       await screen.findByRole("listitem", { name: "Blk 101" });
@@ -231,7 +224,7 @@ describe("locations section", () => {
   );
 
   it("lets shared members browse and search without location write controls", async () => {
-    serve({ owned: false });
+    serve({ role: "COUNCIL" });
     renderWithProviders(<LocationsSection estateId="estate-id" />);
     await showTree();
     await screen.findByRole("listitem", { name: "Blk 101" });

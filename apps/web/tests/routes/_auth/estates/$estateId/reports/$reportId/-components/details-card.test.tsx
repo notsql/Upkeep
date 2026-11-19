@@ -256,13 +256,14 @@ it("shows why the type could not be changed", async () => {
   );
 });
 
-it("does not let crew change the type", async () => {
+// Changing the type is triage, which Crew hold (estate-role-permissions).
+it("lets crew change the type", async () => {
   state.role = "CREW";
   await setup();
   const card = await detailsCard();
 
   card.getByText("Water leak");
-  expect(card.queryByRole("button", { name: "Change type" })).toBeNull();
+  await card.findByRole("button", { name: "Change type" });
 });
 
 it("does not offer a type change while the report is being sorted", async () => {

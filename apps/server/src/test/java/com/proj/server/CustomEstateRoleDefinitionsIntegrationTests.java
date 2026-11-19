@@ -59,11 +59,24 @@ class CustomEstateRoleDefinitionsIntegrationTests extends CustomEstateRoleTestSu
     }
 
     @Test
-    void catalogueContainsTheElevenSupportedCodesWithExplicitPrerequisites() throws Exception {
+    void catalogueContainsTheTwentySixSupportedCodesWithExplicitPrerequisites() throws Exception {
         mvc.perform(as("owner", get(path() + "/role-permissions")))
                 .andExpect(status().isOk())
                 .andExpect(header().string("Cache-Control", "private, no-store"))
-                .andExpect(jsonPath("$[*].code", contains(CODES.toArray())))
+                .andExpect(jsonPath("$[*].code", contains(ALL_CODES.toArray())))
+                .andExpect(
+                        jsonPath("$[?(@.code == 'TRIAGE_FAULT_REPORTS')].requires[0]", contains("VIEW_FAULT_REPORTS")))
+                .andExpect(jsonPath(
+                        "$[?(@.code == 'PROGRESS_ASSIGNED_WORK_ORDERS')].requires[0]", contains("VIEW_WORK_ORDERS")))
+                .andExpect(jsonPath("$[?(@.code == 'MANAGE_WORK_ORDERS')].requires[0]", contains("VIEW_WORK_ORDERS")))
+                .andExpect(jsonPath("$[?(@.code == 'EDIT_ASSETS')].requires[0]", contains("VIEW_ASSETS")))
+                .andExpect(jsonPath("$[?(@.code == 'VIEW_COSTS')].requires[0]", contains("VIEW_ASSETS")))
+                .andExpect(jsonPath("$[?(@.code == 'RECORD_READINGS')].requires[0]", contains("VIEW_READINGS")))
+                .andExpect(jsonPath("$[?(@.code == 'IMPORT_READINGS')].requires[0]", contains("VIEW_READINGS")))
+                .andExpect(jsonPath("$[?(@.code == 'MANAGE_DEVICES')].requires[0]", contains("VIEW_DEVICES")))
+                .andExpect(jsonPath("$[?(@.code == 'RECORD_INSPECTIONS')].requires[0]", contains("VIEW_INSPECTIONS")))
+                .andExpect(jsonPath("$[?(@.code == 'MANAGE_INSPECTIONS')].requires[0]", contains("VIEW_INSPECTIONS")))
+                .andExpect(jsonPath("$[?(@.code == 'VIEW_ASSETS')].requires[0]", contains("VIEW_ESTATE")))
                 .andExpect(jsonPath("$[*].label", everyItem(not(emptyOrNullString()))))
                 .andExpect(jsonPath("$[*].description", everyItem(not(emptyOrNullString()))))
                 .andExpect(jsonPath("$[?(@.code == 'EDIT_ESTATE')].requires[0]", contains("VIEW_ESTATE")))
@@ -104,6 +117,8 @@ class CustomEstateRoleDefinitionsIntegrationTests extends CustomEstateRoleTestSu
                 Arguments.of(
                         "location edit prerequisite",
                         Map.of("name", "Caretaker", "permissions", List.of("EDIT_LOCATIONS"))),
+                Arguments.of(
+                        "asset view prerequisite", Map.of("name", "Caretaker", "permissions", List.of("VIEW_ASSETS"))),
                 Arguments.of(
                         "relocation prerequisite",
                         Map.of("name", "Caretaker", "permissions", List.of("RELOCATE_FAULT_REPORTS"))));
@@ -177,7 +192,7 @@ class CustomEstateRoleDefinitionsIntegrationTests extends CustomEstateRoleTestSu
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"COUNCIL", "CREW", "RESIDENT", "MEMBER"})
+    @ValueSource(strings = {"COUNCIL", "CREW", "RESIDENT"})
     void presetMembersCannotReadTheAdministrationCatalogueOrCreateDefinitions(String preset) throws Exception {
         member(estateId, "other", preset);
         mvc.perform(as("other", get(roles()))).andExpect(status().isForbidden());

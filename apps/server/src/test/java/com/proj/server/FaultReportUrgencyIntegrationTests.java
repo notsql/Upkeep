@@ -120,11 +120,28 @@ class FaultReportUrgencyIntegrationTests {
                 .andExpect(jsonPath("$.lastUrgencyChange.fromIsSafety").value(true));
     }
 
-    @ParameterizedTest
-    @ValueSource(strings = {"CREW", "COUNCIL", "RESIDENT", "MEMBER"})
-    void onlyManagersCanEditEvenWithProviderAdminClaims(String role) throws Exception {
+    @Test
+    void theOwnerKeepsUrgencyRightsWhateverTheirMembershipRowSays() throws Exception {
         var f = fixture();
         var report = report(f, "2026-01-01T00:00:00Z");
+        db.update(ESTATEUSER)
+                .set(ESTATEUSER.ROLE, "COUNCIL")
+                .where(ESTATEUSER.ESTATEID.eq(f.estate).and(ESTATEUSER.USERID.eq("manager")))
+                .execute();
+        change(f, report, "HIGH", false, 0).andExpect(status().isOk());
+    }
+
+    // Urgency needs TRIAGE_FAULT_REPORTS (Managers and Crew); the owner holds every code (estate-role-permissions),
+    // so ownership moves elsewhere before the caller's own membership changes.
+    @ParameterizedTest
+    @ValueSource(strings = {"COUNCIL", "RESIDENT"})
+    void membersWithoutTriageCannotEditEvenWithProviderAdminClaims(String role) throws Exception {
+        var f = fixture();
+        var report = report(f, "2026-01-01T00:00:00Z");
+        db.update(ESTATE)
+                .set(ESTATE.OWNERUSERID, "another-owner")
+                .where(ESTATE.ID.eq(f.estate))
+                .execute();
         db.update(ESTATEUSER)
                 .set(ESTATEUSER.ROLE, role)
                 .where(ESTATEUSER.ESTATEID.eq(f.estate).and(ESTATEUSER.USERID.eq("manager")))

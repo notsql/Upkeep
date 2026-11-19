@@ -133,14 +133,14 @@ a group with no visible items is not rendered.
 | --- | --- | --- | --- |
 | (unlabelled) | Overview | `` (exact match) | `canOpenOverview`: `canViewEstateDetails ?? canViewManagement` |
 | Maintenance | Fault reports | `/reports` | `canOpenFaultReports`: `canViewFaultReports` |
-| Maintenance | Inspections | `/inspections` (also active on `/inspections/schedules/**`) | `canOpenInspections`: `owned \|\| canManageInvitationPermissions` |
+| Maintenance | Inspections | `/inspections` (also active on `/inspections/schedules/**`) | `canOpenInspections`: `canViewInspectionResults` (schedules views: `canOpenCheckSchedules`, `canManageInspections`) |
 | Maintenance | Work orders | `/work-orders` | `canOpenWorkOrders`: `canViewWorkOrders` |
 | Assets | Assets | `/assets`, or `/assets/devices` | `assetsEntry`: `/assets` when `canOpenAssets` (`canViewAssets \|\| canViewAssetHistory \|\| canViewInspectionResults`), else `/assets/devices` when `canOpenAllDevices`, else hidden |
 | Assets | Locations | `/locations` | `canViewManagement` |
 | Assets | Documents | `/documents` | `canOpenDocuments`: `canViewDocuments` |
 | Administration | People & access | `/council` when `canOpenMembers`, else `/roles`; active on `/council/**` and `/roles/**` | `canOpenMembers \|\| canOpenRoles` (`canOpenMembers`: `canViewEstateInvitations \|\| canInviteMembers \|\| canManageInvitationPermissions`; `canOpenRoles`: `canViewEstateRoles`) |
 | Administration | Contractors | `/contractors` | `canOpenContractors`: `canCreateWorkOrders` (decision 0055) |
-| Administration | Estate settings | `/edit`, else `/notification-settings` | `canOpenEstateSettings` (`owned \|\| canManageEstate`) or `canOpenNotificationSettings` (`role === "MANAGER"`); active on either path. The two pages are its Details and Notifications tabs (`EstateSettingsViews`). |
+| Administration | Estate settings | `/edit`, else `/notification-settings` | `canOpenEstateSettings` (`canManageEstate`) or `canOpenNotificationSettings` (`role === "MANAGER"`); active on either path. The two pages are its Details and Notifications tabs (`EstateSettingsViews`). |
 
 There is no Devices, Readings, Device monitoring or Failure risk item: those
 pages live under Assets (All sensors, the asset Overview, By location's risk
@@ -149,10 +149,8 @@ removed from the Assets views); it is reachable by URL only;
 Crew reach an asset's readings from a work order's "View readings" / "Record
 reading" links (see [work-orders.md](work-orders.md)).
 
-`owned` comes from `useEstate(estateId)` (`EstateResponse.owned`, key
-`["estates", userId, "details", estateId]`), mounted only when
-`canViewManagement`; owner-only items stay hidden until it resolves. Access
-loading or errored: no items. Role- or invitation-only estates show only
+Every item reads only access flags (estate-role-permissions); the sidebar no
+longer fetches the estate for ownership. Access loading or errored: no items. Role- or invitation-only estates show only
 Administration > People & access.
 
 Active state: an item is active when its route equals or prefixes the pathname
@@ -200,8 +198,7 @@ Tests: `tests/components/shell/bottom-navigation.test.tsx`.
 ### Shared destination predicates and guards
 
 `lib/estate-destinations.ts` exports one pure `canOpen*` function per sidebar
-row (inputs: the `EstateAccessResponse`, optional `owned`, optional
-`canAccessPlatformAdmin`), plus `estateDestination` and the `EstateFeature`
+row (input: the `EstateAccessResponse` only; ownership opens nothing), plus `estateDestination` and the `EstateFeature`
 type. The sidebar and `routes/_auth/route.tsx` both import them; neither
 restates a rule (see `.spec/decisions/0043-*`).
 
@@ -209,7 +206,9 @@ In `_auth/route.tsx`, `guardDestination` handles the section-level URLs
 (exactly `/estates/<id>/<section>`):
 
 - `/assets` (list) 404s unless `canOpenAssets`. Asset children
-  (`/assets/$assetId/**`) keep `guardInspectionContext`.
+  (`/assets/$assetId/**`) keep `guardInspectionContext`. First, `guardAssetTab`
+  404s an asset's `/costs` tab without `canViewCosts` and its `/devices` tab
+  without `canViewDevices`, matching the tabs `AssetDetailsNav` hides.
 - `/assets/devices` (All sensors) is matched first (`isAllDevicesPath`, so
   "devices" is never treated as an asset ID by `guardInspectionContext`) and
   uses `canOpenAllDevices` (`canOpenDevices || canOpenSensors`), loading
@@ -218,12 +217,11 @@ In `_auth/route.tsx`, `guardDestination` handles the section-level URLs
 - `/inspections` (and up to two levels below it, so
   `/inspections/schedules/$interval`; `SUB_VIEW_DEPTH`), `/asset-categories`
   (old Check schedules bookmarks, which redirect; gated by `canOpenInspections`
-  plus one sub-view), `/notification-settings` and `/edit` use `OWNER_GATED`
-  predicates. If access flags alone
-  do not open the page, the guard loads ownership with
-  `queryClient.ensureQueryData` on `["estates", userId, "details", estateId]`
-  (server function `getSessionEstate`, i.e. `GET /estates/{id}`); a failed
-  fetch counts as not owned. Otherwise `notFound()`. There is no fallback to
+  plus one sub-view), `/notification-settings` and `/edit` use
+  `DESTINATION_GATED` flag predicates (`/asset-categories` and
+  `/inspections/schedules/**` need `canOpenCheckSchedules`). The guard never
+  loads ownership (estate-role-permissions); without the flag it calls
+  `notFound()`. There is no fallback to
   `canViewManagement`.
 
 `components/states/not-found-page.tsx` is the router's default not-found screen, with

@@ -47,7 +47,7 @@ export function CheckSchedulesLayout({
         Turn on regular checks for equipment that can break without anyone
         noticing, like emergency lights.
       </p>
-      <InspectionViews estateId={estateId} />
+      <InspectionViews estateId={estateId} schedules />
       {categories.isPending ? (
         <LoadingState label="Loading check schedules…" variant="table" />
       ) : null}

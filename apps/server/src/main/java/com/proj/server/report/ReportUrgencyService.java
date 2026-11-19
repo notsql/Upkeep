@@ -1,6 +1,6 @@
 package com.proj.server.report;
 
-import com.proj.server.estate.EstateRole;
+import com.proj.server.estate.EstatePermissionCode;
 import com.proj.server.resident.ResidentReportException;
 import com.proj.server.workos.WorkOSService;
 import java.util.UUID;
@@ -47,11 +47,11 @@ public class ReportUrgencyService {
         var row = estates.estate(estate, lock);
         if (row == null) throw error(HttpStatus.NOT_FOUND, "Estate not found.");
         var role = estates.role(estate, user, lock);
-        if (!EstateRole.MANAGER.name().equals(role)) {
+        if (!estates.codes(estate, user).contains(EstatePermissionCode.TRIAGE_FAULT_REPORTS)) {
             boolean known = role != null || user.equals(row.get("ownerUserId", String.class));
             throw error(
                     known ? HttpStatus.FORBIDDEN : HttpStatus.NOT_FOUND,
-                    known ? "Manager membership required." : "Estate not found.");
+                    known ? "This estate permission is required: TRIAGE_FAULT_REPORTS" : "Estate not found.");
         }
         if (row.get("deactivatedAt") != null) throw error(HttpStatus.CONFLICT, "This estate is inactive.");
     }

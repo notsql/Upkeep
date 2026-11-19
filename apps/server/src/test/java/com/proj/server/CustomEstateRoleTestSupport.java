@@ -59,6 +59,27 @@ abstract class CustomEstateRoleTestSupport {
             "VIEW_DOCUMENTS",
             "EDIT_DOCUMENTS");
 
+    /** The catalogue after estate-role-permissions: the eleven above, then the fifteen it added, in enum order. */
+    static final List<String> ALL_CODES = java.util.stream.Stream.concat(
+                    CODES.stream(),
+                    java.util.stream.Stream.of(
+                            "TRIAGE_FAULT_REPORTS",
+                            "VIEW_WORK_ORDERS",
+                            "PROGRESS_ASSIGNED_WORK_ORDERS",
+                            "MANAGE_WORK_ORDERS",
+                            "VIEW_ASSETS",
+                            "EDIT_ASSETS",
+                            "VIEW_COSTS",
+                            "VIEW_READINGS",
+                            "RECORD_READINGS",
+                            "IMPORT_READINGS",
+                            "VIEW_DEVICES",
+                            "MANAGE_DEVICES",
+                            "VIEW_INSPECTIONS",
+                            "RECORD_INSPECTIONS",
+                            "MANAGE_INSPECTIONS"))
+            .toList();
+
     @Autowired
     MockMvc mvc;
 

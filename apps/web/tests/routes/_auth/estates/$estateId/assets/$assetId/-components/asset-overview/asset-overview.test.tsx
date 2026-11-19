@@ -42,9 +42,12 @@ vi.mock("@tanstack/react-router", () => ({
   ),
 }));
 
+// The viewer is described by the access flags the overview reads
+// (estate-role-permissions); the defaults are an owner's or Manager's.
 const viewer = vi.hoisted(() => ({
-  owned: true,
-  role: "MEMBER",
+  canViewAssets: true,
+  canViewDevices: true,
+  canViewInspectionResults: true,
   canViewReadings: true,
   canRecordReadings: true,
   category: "PUMP",
@@ -54,7 +57,7 @@ const viewer = vi.hoisted(() => ({
 vi.mock("@/lib/estates", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/estates")>()),
   useEstate: () => ({
-    data: { id: "estate", name: "Maple Grove", owned: viewer.owned },
+    data: { id: "estate", name: "Maple Grove" },
   }),
 }));
 vi.mock("@/lib/access", async (importOriginal) => ({
@@ -64,7 +67,10 @@ vi.mock("@/lib/access", async (importOriginal) => ({
       estates: [
         {
           estateId: "estate",
-          role: viewer.role,
+          role: "MANAGER",
+          canViewAssets: viewer.canViewAssets,
+          canViewDevices: viewer.canViewDevices,
+          canViewInspectionResults: viewer.canViewInspectionResults,
           canViewReadings: viewer.canViewReadings,
           canRecordReadings: viewer.canRecordReadings,
           canCreateWorkOrders: viewer.canCreateWorkOrders,
@@ -95,12 +101,15 @@ vi.mock(
     AssetConditionSection: ({
       upcoming,
       canRecord,
+      canView,
     }: {
       upcoming?: ReactNode;
       canRecord: boolean;
+      canView: boolean;
     }) => (
       <section aria-label="Condition">
         <h2>Condition</h2>
+        {canView ? <p>Can view assessments</p> : null}
         {canRecord ? <p>Can record assessment</p> : null}
         {upcoming}
       </section>
@@ -228,8 +237,9 @@ beforeEach(() => {
   vi.mocked(api.GET).mockReset();
   Object.assign(viewer, {
     canCreateWorkOrders: false,
-    owned: true,
-    role: "MEMBER",
+    canViewAssets: true,
+    canViewDevices: true,
+    canViewInspectionResults: true,
     canViewReadings: true,
     canRecordReadings: true,
     category: "PUMP",
@@ -331,22 +341,21 @@ describe("AssetOverview readings", () => {
 });
 
 describe("AssetOverview access", () => {
-  it("does not mount the forecast for a non-owner", async () => {
-    viewer.owned = false;
-    viewer.role = "MANAGER";
+  it("does not mount the forecast for someone who cannot view assets", async () => {
+    viewer.canViewAssets = false;
     renderWithProviders(<AssetOverview assetId={ASSET} estateId="estate" />);
     await screen.findByRole("link", { name: STAT });
     expect(screen.queryByText("Breakdown forecast")).toBeNull();
     expect(requested(RISK_PATH)).toBe(false);
   });
 
-  it("shows the forecast to the owner of a pump", async () => {
+  it("shows the forecast of a pump to an asset viewer", async () => {
     renderWithProviders(<AssetOverview assetId={ASSET} estateId="estate" />);
     await screen.findByText("Breakdown forecast");
     await waitFor(() => expect(requested(RISK_PATH)).toBe(true));
   });
 
-  it("shows the owner what is coming up, from the inspection list", async () => {
+  it("shows an inspection viewer what is coming up, from the inspection list", async () => {
     renderWithProviders(<AssetOverview assetId={ASSET} estateId="estate" />);
     const condition = screen.getByRole("region", { name: "Condition" });
     await within(condition).findByRole("heading", {
@@ -359,9 +368,9 @@ describe("AssetOverview access", () => {
     );
   });
 
-  it("shows no Upcoming and requests no schedule for a plain member", async () => {
-    viewer.owned = false;
-    viewer.role = "CREW";
+  it("shows no Upcoming and requests no schedule without inspection or asset access", async () => {
+    viewer.canViewInspectionResults = false;
+    viewer.canViewAssets = false;
     renderWithProviders(<AssetOverview assetId={ASSET} estateId="estate" />);
     await screen.findByRole("region", { name: "Trends" });
     expect(screen.queryByRole("heading", { name: "Upcoming" })).toBeNull();
@@ -371,9 +380,8 @@ describe("AssetOverview access", () => {
     ).toBe(false);
   });
 
-  it("shows no devices stat to a viewer who is neither owner nor Manager", async () => {
-    viewer.owned = false;
-    viewer.role = "CREW";
+  it("shows no devices stat to someone who cannot view devices", async () => {
+    viewer.canViewDevices = false;
     renderWithProviders(<AssetOverview assetId={ASSET} estateId="estate" />);
     await screen.findByRole("region", { name: "Trends" });
     expect(screen.queryByRole("link", { name: STAT })).toBeNull();
@@ -385,6 +393,23 @@ describe("AssetOverview access", () => {
     viewer.canCreateWorkOrders = true;
     renderWithProviders(<AssetOverview assetId={ASSET} estateId="estate" />);
     await screen.findByRole("heading", { name: "Condition" });
+    expect(screen.queryByText("Can record assessment")).toBeNull();
+  });
+
+  // Council: assets without readings, where assessments live (estate-role-permissions).
+  it("offers no condition to view or record without the reading permissions", async () => {
+    viewer.canViewReadings = false;
+    viewer.canRecordReadings = false;
+    renderWithProviders(<AssetOverview assetId={ASSET} estateId="estate" />);
+    await screen.findByRole("heading", { name: "Condition" });
+    expect(screen.queryByText("Can view assessments")).toBeNull();
+    expect(screen.queryByText("Can record assessment")).toBeNull();
+  });
+
+  it("lets a reading viewer who cannot record readings see but not record a condition", async () => {
+    viewer.canRecordReadings = false;
+    renderWithProviders(<AssetOverview assetId={ASSET} estateId="estate" />);
+    await screen.findByText("Can view assessments");
     expect(screen.queryByText("Can record assessment")).toBeNull();
   });
 

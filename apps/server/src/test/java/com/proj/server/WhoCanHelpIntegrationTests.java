@@ -48,7 +48,6 @@ class WhoCanHelpIntegrationTests {
         MEMBERS.put("manager", "Manager");
         MEMBERS.put("crew", "Crew");
         MEMBERS.put("council", "Council");
-        MEMBERS.put("member", "Member");
         MEMBERS.put("resident", "Resident");
         MEMBERS.put("lead", "Facilities lead");
     }
@@ -78,7 +77,6 @@ class WhoCanHelpIntegrationTests {
         membership("manager", "MANAGER");
         membership("crew", "CREW");
         membership("council", "COUNCIL");
-        membership("member", "MEMBER");
         membership("resident", "RESIDENT");
         var roleId = UUID.randomUUID();
         db.execute(
@@ -190,15 +188,17 @@ class WhoCanHelpIntegrationTests {
 
     @Test
     void rolesComeInAFixedOrderWithTheOwnerLast() throws Exception {
-        assertEquals(List.of("Manager", "estate owner"), roles("crew", "SEND_CONTRACTOR"));
-        assertEquals(List.of("estate owner"), roles("member", "REPLACE_SENSOR"));
+        // The all-codes custom role holds MANAGE_WORK_ORDERS too (estate-role-permissions).
+        assertEquals(List.of("Manager", "Facilities lead", "estate owner"), roles("crew", "SEND_CONTRACTOR"));
+        assertEquals(List.of("Manager", "Facilities lead", "estate owner"), roles("council", "REPLACE_SENSOR"));
     }
 
     @Test
     void rolesNobodyHoldsAreLeftOut() throws Exception {
         db.execute("delete from \"EstateUser\" where \"estateId\" = ? and role = 'MANAGER'", estateId);
-        assertEquals(List.of("estate owner"), roles("crew", "PAUSE_SENSOR_WARNINGS"));
-        assertEquals(List.of(), roles("crew", "REVIEW_DUPLICATE"));
+        assertEquals(List.of("Facilities lead", "estate owner"), roles("crew", "PAUSE_SENSOR_WARNINGS"));
+        // Crew and the all-codes custom role hold TRIAGE_FAULT_REPORTS (estate-role-permissions).
+        assertEquals(List.of("Crew", "Facilities lead", "estate owner"), roles("crew", "REVIEW_DUPLICATE"));
     }
 
     @Test

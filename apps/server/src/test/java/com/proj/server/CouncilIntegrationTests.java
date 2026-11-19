@@ -460,7 +460,7 @@ class CouncilIntegrationTests {
                 "select role, \"canInviteMembers\" from \"EstateUser\" where \"estateId\" = ? and \"userId\" = ?",
                 estateId,
                 "recipient");
-        assertEquals("MEMBER", grant.get(0));
+        assertEquals("COUNCIL", grant.get(0)); // The admin grant writes Council since MEMBER was retired.
         assertEquals(true, grant.get(1));
         estateId = estates.create(
                         "owner", new EstateRequest("Inactive", UUID.randomUUID().toString(), "Road", "123456", null))
@@ -735,7 +735,7 @@ class CouncilIntegrationTests {
                 "select role, \"canInviteMembers\" from \"EstateUser\" where \"estateId\" = ? and \"userId\" = ?",
                 estateId,
                 "recipient");
-        assertEquals("MEMBER", grant.get(0));
+        assertEquals("COUNCIL", grant.get(0)); // The admin grant writes Council since MEMBER was retired.
         assertEquals(true, grant.get(1));
         mvc.perform(
                         patch(path())

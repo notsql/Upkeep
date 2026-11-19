@@ -93,17 +93,18 @@ class WorkOrderAssignmentTests {
     }
 
     @Test
+    // Arguments: status, holds MANAGE_WORK_ORDERS, holds PROGRESS_ASSIGNED_WORK_ORDERS, assignee, caller
+    // (estate-role-permissions; Crew hold the second, Managers the first).
     void managersMayProgressAnyOpenOrderAndCrewOnlyTheirOwn() {
-        assertTrue(WorkOrderAssignment.canProgress(ASSIGNED, true, "MANAGER", null, "user_m"));
-        assertTrue(WorkOrderAssignment.canProgress(IN_PROGRESS, true, null, "user_priya", "owner"));
-        assertTrue(WorkOrderAssignment.canProgress(ASSIGNED, false, "CREW", "user_priya", "user_priya"));
-        assertTrue(WorkOrderAssignment.canProgress(IN_PROGRESS, false, "CREW", "user_priya", "user_priya"));
+        assertTrue(WorkOrderAssignment.canProgress(ASSIGNED, true, false, null, "user_m"));
+        assertTrue(WorkOrderAssignment.canProgress(IN_PROGRESS, true, false, "user_priya", "owner"));
+        assertTrue(WorkOrderAssignment.canProgress(ASSIGNED, false, true, "user_priya", "user_priya"));
+        assertTrue(WorkOrderAssignment.canProgress(IN_PROGRESS, false, true, "user_priya", "user_priya"));
 
-        assertFalse(WorkOrderAssignment.canProgress(ASSIGNED, false, "CREW", "user_priya", "user_other"));
-        assertFalse(WorkOrderAssignment.canProgress(OPEN, false, "CREW", null, "user_priya"));
-        assertFalse(WorkOrderAssignment.canProgress(ASSIGNED, false, "RESIDENT", "user_priya", "user_priya"));
-        assertFalse(WorkOrderAssignment.canProgress(ASSIGNED, false, null, "user_priya", "user_priya"));
-        assertFalse(WorkOrderAssignment.canProgress(CLOSED, true, "MANAGER", null, "user_m"));
-        assertFalse(WorkOrderAssignment.canProgress(CLOSED, false, "CREW", "user_priya", "user_priya"));
+        assertFalse(WorkOrderAssignment.canProgress(ASSIGNED, false, true, "user_priya", "user_other"));
+        assertFalse(WorkOrderAssignment.canProgress(OPEN, false, true, null, "user_priya"));
+        assertFalse(WorkOrderAssignment.canProgress(ASSIGNED, false, false, "user_priya", "user_priya"));
+        assertFalse(WorkOrderAssignment.canProgress(CLOSED, true, false, null, "user_m"));
+        assertFalse(WorkOrderAssignment.canProgress(CLOSED, false, true, "user_priya", "user_priya"));
     }
 }

@@ -83,7 +83,8 @@ it("lets a location creator add a block and bulk floors without estate-detail ed
   expect(screen.queryByRole("menuitem", { name: DEACTIVATE })).toBeNull();
 });
 
-it("lets a location editor rename and move locations without creation or deactivation controls", async () => {
+// EDIT_LOCATIONS covers renaming, moving and deactivating (estate-role-permissions).
+it("lets a location editor rename, move and deactivate locations without creation controls", async () => {
   serve({ edit: true });
   renderWithProviders(<LocationsSection estateId="estate" />);
   fireEvent.click(
@@ -94,7 +95,7 @@ it("lets a location editor rename and move locations without creation or deactiv
   expect(
     screen.queryByRole("menuitem", { name: "Add levels to Block A" })
   ).toBeNull();
-  expect(screen.queryByRole("menuitem", { name: DEACTIVATE })).toBeNull();
+  screen.getByRole("menuitem", { name: DEACTIVATE });
 });
 
 it("does not treat estate-detail editing as permission to create locations", async () => {

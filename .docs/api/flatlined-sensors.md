@@ -13,20 +13,21 @@ the feature specification and decision 0030.
 
 All four endpoints require a JWT subject and return `Cache-Control: private,
 no-store`. The server checks current membership for the target estate on every
-request. Owners and current same-estate MANAGER members read/write without a
-WorkOS admin claim, unless a conflicting same-estate RESIDENT row exists.
-Manager demotion/removal changes permission on the next request with the same
-token. Existing compatibility rules remain: JWT ROLE_admin plus a same-estate MEMBER or COUNCIL assignment permits writes;
-COUNCIL without admin authority reads only. MEMBER without admin and other known
-unauthorized roles receive 403. No assignment/foreign estate returns 404, even
+request. Reads need `VIEW_DEVICES` and writes need `MANAGE_DEVICES` in the estate
+(estate-role-permissions): the owner and every Manager hold both, Council view
+only, custom roles hold what they are granted, unless a conflicting same-estate
+RESIDENT row exists. Role changes apply on the next request with the same
+token. The kept compatibility rule: JWT ROLE_admin plus a same-estate COUNCIL
+assignment also permits writes. Crew and other members without the codes
+receive 403. No assignment/foreign estate returns 404, even
 for platform admins. Residency elsewhere does not remove legitimate access.
 
 | Method / path | Request | Response |
 | --- | --- | --- |
 | GET `/estates/{estateId}/flatline-policies` | Estate UUID | 200 `FlatlinePoliciesResponse`, every metric in catalogue order |
-| PUT `/estates/{estateId}/flatline-policies/{metric}` | Estate UUID, DeviceMetric, `SetFlatlinePolicyRequest`; owner/assigned manager | 200 `FlatlinePolicyResponse` |
+| PUT `/estates/{estateId}/flatline-policies/{metric}` | Estate UUID, DeviceMetric, `SetFlatlinePolicyRequest`; `MANAGE_DEVICES` | 200 `FlatlinePolicyResponse` |
 | GET `/estates/{estateId}/flatlined-sensors` | Estate UUID; optional view=REVIEW or ALL, page=0, size=25 | 200 `FlatlineReviewResponse` |
-| POST `/estates/{estateId}/devices/{deviceId}/flatline-pauses/{metric}` | Estate/device UUIDs, DeviceMetric, `CreateFlatlinePauseRequest`; owner/assigned manager | 201 `FlatlinePauseResponse` |
+| POST `/estates/{estateId}/devices/{deviceId}/flatline-pauses/{metric}` | Estate/device UUIDs, DeviceMetric, `CreateFlatlinePauseRequest`; `MANAGE_DEVICES` | 201 `FlatlinePauseResponse` |
 
 Common errors use `EstateError { message: string }`: 400 invalid DTO, UUID,
 metric or pagination; 401 missing identity; 403 insufficient estate role;

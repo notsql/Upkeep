@@ -6,11 +6,11 @@ creating an event store, copying files, recording invoice costs or running infer
 
 ## Authority and errors
 
-Authenticated current estate Owners and same-estate `COUNCIL` members may read.
-A same-estate Resident membership overrides ownership. Manager, Crew, legacy
-Member and custom document grants do not independently grant history. The live
-`/access/context` field `canViewAssetHistory: boolean` is separate from unchanged
-owner-only `canViewAssets`. Every page rechecks authority. Retired assets and
+Readers need the `VIEW_ASSETS` permission code in the estate: the owner, every
+Manager, Council and custom roles granted it (estate-role-permissions). A
+same-estate Resident membership overrides ownership. Crew and Residents get 403;
+non-members get 404. In `/access/context`, `canViewAssetHistory` and
+`canViewAssets` both equal `VIEW_ASSETS`. Every page rechecks authority. Retired assets and
 inactive estates retain reads.
 
 Every response is `Cache-Control: private, no-store`. Errors use
@@ -93,8 +93,8 @@ is the timeline kind, not a work-order status. An order with no linked asset doe
 not contribute to an asset's history merely because its location matches.
 Unknown costs/downtime remain null, distinct from zero. Existing model assessments
 have source label Anomaly detection; this is provenance, not prediction history.
-Source-detail link flags require independent source-screen access (Owner true,
-Council false under the current policy).
+Source-detail link flags require `VIEW_WORK_ORDERS` in the estate (owner and
+Managers true, Council false).
 
 Documents are the UUID-deduplicated union of non-deleted direct links and links
 through same-estate work orders for this asset, before page limits. They use original

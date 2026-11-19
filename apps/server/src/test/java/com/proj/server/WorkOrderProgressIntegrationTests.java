@@ -74,7 +74,7 @@ class WorkOrderProgressIntegrationTests {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"CREW", "RESIDENT", "COUNCIL", "MEMBER", "foreign"})
+    @ValueSource(strings = {"CREW", "RESIDENT", "COUNCIL", "foreign"})
     void deniesProgressAndCompletionToReadOnlyOrForeignMemberships(String role) throws Exception {
         var data = new DeviceTestData(db).estateWithAsset(owner);
         String id = create(data, false);
@@ -104,15 +104,17 @@ class WorkOrderProgressIntegrationTests {
         mvc.perform(get(base(data) + "/" + id).with(jwt().jwt(t -> t.subject("crew"))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.completion.findings").value("Worn seal"));
+        // Every Manager holds VIEW_ASSETS (estate-role-permissions).
         mvc.perform(get("/estates/" + data[0] + "/assets/" + data[2]).with(jwt().jwt(t -> t.subject("manager"))))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isOk());
         mvc.perform(get(history(data)).with(jwt().jwt(t -> t.subject(owner))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(1))
                 .andExpect(jsonPath("$[0].workOrderId").value(id))
                 .andExpect(jsonPath("$[0].completion.totalCost").value("12.30"));
+        // Every Manager holds VIEW_ASSETS (estate-role-permissions).
         mvc.perform(get(history(data)).with(jwt().jwt(t -> t.subject("manager"))))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isOk());
         assertEquals(0, db.fetchCount(org.jooq.impl.DSL.table("\"AssetEvent\"")));
     }
 

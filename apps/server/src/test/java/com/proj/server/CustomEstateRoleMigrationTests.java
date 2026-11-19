@@ -25,6 +25,9 @@ import org.testcontainers.utility.MountableFile;
 /** Apply the real expand migration over populated preset-era data, never a hand-built test schema. */
 class CustomEstateRoleMigrationTests {
     private static final String LAST_PRE_CUSTOM_MIGRATION = "20261020044009_flatline_policies";
+    /** The last migration this suite covers: documents added the final two of the eleven codes. */
+    private static final String LAST_COVERED_MIGRATION = "20261025110000_documents";
+
     private static final UUID ESTATE = UUID.randomUUID();
     private static PostgreSQLContainer postgres;
     private Connection connection;
@@ -72,7 +75,8 @@ class CustomEstateRoleMigrationTests {
                 }
             }
             for (var folder : migrations) {
-                if (folder.getFileName().toString().compareTo(LAST_PRE_CUSTOM_MIGRATION) > 0) {
+                var name = folder.getFileName().toString();
+                if (name.compareTo(LAST_PRE_CUSTOM_MIGRATION) > 0 && name.compareTo(LAST_COVERED_MIGRATION) <= 0) {
                     ScriptUtils.executeSqlScript(db, new FileSystemResource(folder.resolve("migration.sql")));
                 }
             }

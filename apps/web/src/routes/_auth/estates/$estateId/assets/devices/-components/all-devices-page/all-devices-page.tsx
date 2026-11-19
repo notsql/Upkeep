@@ -16,10 +16,12 @@ import { useAllDevicesPage } from "@/routes/_auth/estates/$estateId/assets/devic
 function AllDevicesResults({
   estateId,
   withDevices,
+  canReplace,
   linkAssets,
 }: {
   estateId: string;
   withDevices: boolean;
+  canReplace: boolean;
   linkAssets: boolean;
 }) {
   const page = useAllDevicesPage(estateId, withDevices);
@@ -59,7 +61,7 @@ function AllDevicesResults({
       {page.rows?.length ? (
         <AllDevicesTable
           canManage={page.canManage}
-          canReplace={withDevices}
+          canReplace={canReplace}
           estateId={estateId}
           linkAssets={linkAssets}
           locationFor={page.locationFor}
@@ -80,8 +82,9 @@ function AllDevicesResults({
 }
 
 /**
- * Assets > All devices. Device status comes from the estate device list for
- * owners and Managers; Council get read-only rows from the flatline review.
+ * Assets > All devices. Everyone who can view devices gets the estate device
+ * list; only those who can manage devices may replace them
+ * (estate-role-permissions).
  */
 export function AllDevicesPage({ estateId }: { estateId: string }) {
   const access = useAssetViewsAccess(estateId);
@@ -101,6 +104,7 @@ export function AllDevicesPage({ estateId }: { estateId: string }) {
       ) : null}
       {!access.pending && access.review ? (
         <AllDevicesResults
+          canReplace={access.manageDevices}
           estateId={estateId}
           linkAssets={access.assetPages}
           withDevices={access.devices}

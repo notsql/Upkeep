@@ -30,7 +30,7 @@ class DocumentRolePermissionsIntegrationTests extends DocumentTestSupport {
 
     @Test
     void readOnlyCustomRolesCanSearchAndDownloadWithoutGeneralEstateAccess() throws Exception {
-        var document = upload("crew", "invoice.pdf");
+        var document = upload("uploader", "invoice.pdf");
         grant("author", "VIEW_DOCUMENTS");
 
         mvc.perform(as("author", get(documents()).param("filename", "invoice")))
@@ -53,7 +53,7 @@ class DocumentRolePermissionsIntegrationTests extends DocumentTestSupport {
     void editCustomRolesCanUploadAndDeleteOnlyTheirOwnFiles() throws Exception {
         grant("author", "VIEW_DOCUMENTS", "EDIT_DOCUMENTS");
         var own = upload("author", "own.pdf");
-        var other = upload("crew", "other.pdf");
+        var other = upload("uploader", "other.pdf");
 
         mvc.perform(as("author", delete(documents() + "/" + id(other)))).andExpect(status().isForbidden());
         mvc.perform(as("author", delete(documents() + "/" + id(own)))).andExpect(status().isNoContent());
@@ -116,13 +116,28 @@ class DocumentRolePermissionsIntegrationTests extends DocumentTestSupport {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"owner", "manager", "member", "crew"})
+    @ValueSource(strings = {"owner", "manager", "member"})
     void presetRolesKeepReadAccessWhenInactiveButCannotUpload(String user) throws Exception {
         inactive();
 
         var access = body(mvc.perform(as(user, get("/access/context"))).andExpect(status().isOk()));
         var estate = ownEstate(access);
         assertTrue(estate.get("canViewDocuments").asBoolean());
+        assertFalse(estate.get("canUploadDocuments").asBoolean());
+    }
+
+    // Invoices and service reports are for Managers and Council only (estate-role-permissions).
+    @org.junit.jupiter.api.Test
+    void crewHaveNoInvoicesOrServiceReports() throws Exception {
+        member(estateId, "crew-member", "CREW");
+        var document = upload("member", "invoice.pdf");
+        mvc.perform(as("crew-member", get(documents()))).andExpect(status().isForbidden());
+        mvc.perform(as("crew-member", submission("INVOICE", pdfFile("crew.pdf"))))
+                .andExpect(status().isForbidden());
+        mvc.perform(as("crew-member", get(documents() + "/" + document.get("id").asText() + "/content")))
+                .andExpect(status().isForbidden());
+        var estate = ownEstate(body(mvc.perform(as("crew-member", get("/access/context")))));
+        assertFalse(estate.get("canViewDocuments").asBoolean());
         assertFalse(estate.get("canUploadDocuments").asBoolean());
     }
 }

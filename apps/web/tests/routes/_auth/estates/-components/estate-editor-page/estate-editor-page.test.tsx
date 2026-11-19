@@ -253,42 +253,38 @@ it("keeps creation breadcrumb and Cancel destinations on the estate directory, w
   expect(api.POST).not.toHaveBeenCalled();
 });
 
-it.each([
-  "COUNCIL",
-  "MEMBER",
-  "CREW",
-  "RESIDENT",
-  "unassigned",
-  "other-estate Manager",
-])("blocks direct edit navigation for %s", async (role) => {
-  const access = {
-    ...unassignedAccess,
-    estates:
-      role === "unassigned"
-        ? []
-        : [
-            {
-              ...ownerEstateAccess,
-              estateId: role === "other-estate Manager" ? "other" : estate.id,
-              role: role === "other-estate Manager" ? "MANAGER" : role,
-              canManageEstate: role === "other-estate Manager",
-            },
-          ],
-  };
-  vi.mocked(api.GET).mockImplementation(
-    async (path) =>
-      ({
-        data: path === "/access/context" ? access : estate,
-        response: new Response(),
-      }) as never
-  );
-  renderWithProviders(<EstateEditorPage estateId={estate.id} />);
-  expect((await screen.findByRole("alert")).textContent).toContain(
-    "Only the owner or an assigned Manager can edit estate details."
-  );
-  expect(screen.queryByRole("textbox", { name: "Name" })).toBeNull();
-  expect(screen.queryByRole("button", { name: "Save changes" })).toBeNull();
-});
+it.each(["COUNCIL", "CREW", "RESIDENT", "unassigned", "other-estate Manager"])(
+  "blocks direct edit navigation for %s",
+  async (role) => {
+    const access = {
+      ...unassignedAccess,
+      estates:
+        role === "unassigned"
+          ? []
+          : [
+              {
+                ...ownerEstateAccess,
+                estateId: role === "other-estate Manager" ? "other" : estate.id,
+                role: role === "other-estate Manager" ? "MANAGER" : role,
+                canManageEstate: role === "other-estate Manager",
+              },
+            ],
+    };
+    vi.mocked(api.GET).mockImplementation(
+      async (path) =>
+        ({
+          data: path === "/access/context" ? access : estate,
+          response: new Response(),
+        }) as never
+    );
+    renderWithProviders(<EstateEditorPage estateId={estate.id} />);
+    expect((await screen.findByRole("alert")).textContent).toContain(
+      "Only the owner or an assigned Manager can edit estate details."
+    );
+    expect(screen.queryByRole("textbox", { name: "Name" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Save changes" })).toBeNull();
+  }
+);
 
 it.each([undefined, "2026-09-25T00:00:00Z"])(
   "allows an assigned Manager to save details (inactive: %s)",

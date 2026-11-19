@@ -1,8 +1,9 @@
 import type { components } from "@proj/api/schema";
 
 // One predicate per estate destination, shared by the sidebar and the route
-// guard so the two never disagree. `owned` comes from `EstateResponse`; the
-// access projection has no owner flag.
+// guard so the two never disagree. Every predicate reads the access flags,
+// which the server derives from the user's permission codes
+// (estate-role-permissions); ownership alone opens nothing here.
 type Permission = components["schemas"]["EstateAccessResponse"] | undefined;
 
 export function canOpenOverview(permission: Permission): boolean {
@@ -24,17 +25,14 @@ export function canOpenContractors(permission: Permission): boolean {
   return Boolean(permission?.canCreateWorkOrders);
 }
 
-function ownerOrDelegate(permission: Permission, owned?: boolean): boolean {
-  return Boolean(
-    permission && (owned || permission.canManageInvitationPermissions)
-  );
+/** Inspections: results, the due list and inspectors (VIEW_INSPECTIONS). */
+export function canOpenInspections(permission: Permission): boolean {
+  return Boolean(permission?.canViewInspectionResults);
 }
 
-export function canOpenInspections(
-  permission: Permission,
-  owned?: boolean
-): boolean {
-  return ownerOrDelegate(permission, owned);
+/** Check schedules: service intervals and silent-failure flags (MANAGE_INSPECTIONS). */
+export function canOpenCheckSchedules(permission: Permission): boolean {
+  return Boolean(permission?.canManageInspections);
 }
 
 export function canOpenAssets(permission: Permission): boolean {
@@ -45,44 +43,22 @@ export function canOpenAssets(permission: Permission): boolean {
   );
 }
 
-export function canOpenDevices(
-  permission: Permission,
-  owned?: boolean
-): boolean {
-  return ownerOrDelegate(permission, owned);
+export function canOpenDevices(permission: Permission): boolean {
+  return Boolean(permission?.canViewDevices);
 }
 
 export function canOpenReadings(permission: Permission): boolean {
   return Boolean(permission?.canViewReadings);
 }
 
-export function canOpenSensors(
-  permission: Permission,
-  owned?: boolean,
-  platformAdmin?: boolean
-): boolean {
-  if (!permission) {
-    return false;
-  }
-  return Boolean(
-    owned ||
-      (permission.canViewManagement &&
-        (permission.role === "MANAGER" ||
-          permission.role === "COUNCIL" ||
-          (permission.role === "MEMBER" && platformAdmin)))
-  );
+/** Device monitoring: anyone who can view devices (VIEW_DEVICES; estate-role-permissions). */
+export function canOpenSensors(permission: Permission): boolean {
+  return Boolean(permission?.canViewDevices);
 }
 
 /** Assets > All devices: everyone who could open Devices or Device monitoring. */
-export function canOpenAllDevices(
-  permission: Permission,
-  owned?: boolean,
-  platformAdmin?: boolean
-): boolean {
-  return (
-    canOpenDevices(permission, owned) ||
-    canOpenSensors(permission, owned, platformAdmin)
-  );
+export function canOpenAllDevices(permission: Permission): boolean {
+  return canOpenDevices(permission) || canOpenSensors(permission);
 }
 
 /**
@@ -90,9 +66,7 @@ export function canOpenAllDevices(
  * else All devices for the Devices / Device monitoring audience it replaced.
  */
 export function assetsEntry(
-  permission: Permission,
-  owned?: boolean,
-  platformAdmin?: boolean
+  permission: Permission
 ):
   | "/estates/$estateId/assets"
   | "/estates/$estateId/assets/devices"
@@ -100,22 +74,19 @@ export function assetsEntry(
   if (canOpenAssets(permission)) {
     return "/estates/$estateId/assets";
   }
-  if (canOpenAllDevices(permission, owned, platformAdmin)) {
+  if (canOpenAllDevices(permission)) {
     return "/estates/$estateId/assets/devices";
   }
   return undefined;
 }
 
-/** The "All readings" link on the Assets views; Crew use work-order links. */
+/** The "All readings" link on the Assets views, so it needs both. */
 export function canOpenAllReadings(permission: Permission): boolean {
-  return canOpenReadings(permission) && permission?.role !== "CREW";
+  return canOpenReadings(permission) && Boolean(permission?.canViewAssets);
 }
 
-export function canOpenFailureRisk(
-  permission: Permission,
-  owned?: boolean
-): boolean {
-  return Boolean(permission && owned);
+export function canOpenFailureRisk(permission: Permission): boolean {
+  return Boolean(permission?.canViewAssets);
 }
 
 export function canOpenDocuments(permission: Permission): boolean {
@@ -139,11 +110,8 @@ export function canOpenNotificationSettings(permission: Permission): boolean {
   return permission?.role === "MANAGER";
 }
 
-export function canOpenEstateSettings(
-  permission: Permission,
-  owned?: boolean
-): boolean {
-  return Boolean(permission && (owned || permission.canManageEstate));
+export function canOpenEstateSettings(permission: Permission): boolean {
+  return Boolean(permission?.canManageEstate);
 }
 
 export type EstateFeature =

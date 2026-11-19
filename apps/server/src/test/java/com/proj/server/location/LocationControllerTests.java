@@ -26,11 +26,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
+import org.springframework.web.server.ResponseStatusException;
 
 @WebMvcTest(
         controllers = LocationController.class,
@@ -77,9 +79,13 @@ class LocationControllerTests {
     @BeforeEach
     void setup() {
         when(estates.findAccessible(estateId, "owner")).thenReturn(Optional.of(estate(null)));
-        when(estates.findOwned(estateId, "owner", true)).thenReturn(Optional.of(estate(null)));
-        when(estates.isManager(estateId, "owner")).thenReturn(true);
-        when(estates.findAccessibleForUpdate(estateId, "owner")).thenReturn(Optional.of(estate(null)));
+        when(estates.require(eq(estateId), eq("owner"), any(), anyBoolean())).thenReturn(estate(null));
+        // Location writes need CREATE_LOCATIONS / EDIT_LOCATIONS (estate-role-permissions): Council lack them,
+        // strangers find nothing.
+        when(estates.require(eq(estateId), eq("member"), any(), anyBoolean()))
+                .thenThrow(new ResponseStatusException(HttpStatus.FORBIDDEN, "This estate permission is required."));
+        when(estates.require(eq(estateId), eq("other"), any(), anyBoolean()))
+                .thenThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "Estate not found."));
         when(repository.find(blockId, estateId)).thenReturn(Optional.of(block));
         when(repository.find(otherBlockId, estateId)).thenReturn(Optional.of(otherBlock));
         when(repository.find(levelId, estateId)).thenReturn(Optional.of(level));
@@ -87,11 +93,12 @@ class LocationControllerTests {
     }
 
     @Test
-    void assignedManagerCreatesALocationWithoutOwnerModificationRights() throws Exception {
-        when(estates.isManager(estateId, "manager")).thenReturn(true);
-        when(estates.findAccessible(estateId, "manager")).thenReturn(Optional.of(estate(null)));
-        when(estates.findAccessibleForUpdate(estateId, "manager")).thenReturn(Optional.of(estate(null)));
+    void assignedManagerCreatesRenamesAndDeactivatesLikeTheOwner() throws Exception {
+        // Every Manager holds CREATE_LOCATIONS and EDIT_LOCATIONS (estate-role-permissions).
+        when(estates.require(eq(estateId), eq("manager"), any(), anyBoolean())).thenReturn(estate(null));
         when(repository.create(eq(estateId), any(), isNull())).thenReturn(block);
+        when(repository.update(eq(blockId), any(), any())).thenReturn(block);
+        when(repository.deactivate(blockId)).thenReturn(block);
         mvc.perform(post(base)
                         .with(jwt().jwt(t -> t.subject("manager")))
                         .contentType(MediaType.APPLICATION_JSON)
@@ -102,9 +109,9 @@ class LocationControllerTests {
                         .with(jwt().jwt(t -> t.subject("manager")))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(update(null, "Renamed", null)))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isOk());
         mvc.perform(post(base + "/" + blockId + "/deactivate").with(jwt().jwt(t -> t.subject("manager"))))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isOk());
     }
 
     @Test
@@ -118,20 +125,20 @@ class LocationControllerTests {
                         .with(jwt().jwt(t -> t.subject("member")))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(create("BLOCK", null, "New block", null)))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isForbidden());
         mvc.perform(patch(base + "/" + blockId)
                         .with(jwt().jwt(t -> t.subject("member")))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(update(null, "Renamed", null)))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isForbidden());
         mvc.perform(post(base + "/" + blockId + "/deactivate").with(jwt().jwt(t -> t.subject("member"))))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isForbidden());
     }
 
     @Test
-    void historicalLocationReadsRemainOwnerOnly() throws Exception {
+    void historicalLocationReadsNeedEditLocations() throws Exception {
         var inactive = new LocationResponse(blockId, LocationType.BLOCK, null, "Former block", null, now, now, now);
-        when(estates.findOwned(estateId, "owner", false)).thenReturn(Optional.of(estate(now)));
+        when(estates.require(eq(estateId), eq("owner"), any(), anyBoolean())).thenReturn(estate(now));
         when(estates.findAccessible(estateId, "member")).thenReturn(Optional.of(estate(now)));
         when(repository.listAll(estateId)).thenReturn(List.of(inactive));
         mvc.perform(get(base).param("includeInactive", "true").with(jwt().jwt(t -> t.subject("owner"))))
@@ -139,7 +146,7 @@ class LocationControllerTests {
                 .andExpect(jsonPath("$[0].name").value("Former block"))
                 .andExpect(jsonPath("$[0].deactivatedAt").isNotEmpty());
         mvc.perform(get(base).param("includeInactive", "true").with(jwt().jwt(t -> t.subject("member"))))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isForbidden()); // Council lack EDIT_LOCATIONS (estate-role-permissions).
     }
 
     private MockHttpServletRequestBuilder asOwner(MockHttpServletRequestBuilder request, String json) {
@@ -275,9 +282,8 @@ class LocationControllerTests {
 
     @Test
     void rejectsChangesToAnInactiveEstate() throws Exception {
-        when(estates.findOwned(estateId, "owner", true)).thenReturn(Optional.of(estate(now)));
+        when(estates.require(eq(estateId), eq("owner"), any(), anyBoolean())).thenReturn(estate(now));
         when(estates.findAccessible(estateId, "owner")).thenReturn(Optional.of(estate(now)));
-        when(estates.findAccessibleForUpdate(estateId, "owner")).thenReturn(Optional.of(estate(now)));
         mvc.perform(asOwner(post(base), create("BLOCK", null, "Blk 1", null))).andExpect(status().isConflict());
         mvc.perform(asOwner(patch(base + "/" + blockId), update(null, "Blk 1", null)))
                 .andExpect(status().isConflict());
@@ -496,18 +502,18 @@ class LocationControllerTests {
         mvc.perform(asOwner(post(floors), range(1, 3))).andExpect(status().isConflict());
 
         when(repository.find(blockId, estateId)).thenReturn(Optional.of(block));
-        when(estates.findOwned(estateId, "owner", true)).thenReturn(Optional.of(estate(now)));
+        when(estates.require(eq(estateId), eq("owner"), any(), anyBoolean())).thenReturn(estate(now));
         mvc.perform(asOwner(post(floors), range(1, 3))).andExpect(status().isConflict());
         verify(repository, never()).create(any(), any(), any());
     }
 
     @Test
-    void hidesOtherOwnersEstatesAndUnknownBlocksWhenAddingFloors() throws Exception {
+    void refusesCouncilAndHidesUnknownBlocksWhenAddingFloors() throws Exception {
         mvc.perform(post(floors)
                         .with(jwt().jwt(t -> t.subject("member")))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(range(1, 3)))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isForbidden());
         mvc.perform(asOwner(post(base + "/" + UUID.randomUUID() + "/floors"), range(1, 3)))
                 .andExpect(status().isNotFound());
         verify(repository, never()).create(any(), any(), any());

@@ -8,7 +8,7 @@ API: [../api/report-routing.md](../api/report-routing.md).
 
 | Hook | Call | Query key / invalidation |
 | --- | --- | --- |
-| `useRoutingAccess(estateId)` | access projection | `canManage` = `canCreateWorkOrders`; `canViewWorkOrders` |
+| `useRoutingAccess(estateId)` | access projection | `canManage` = `canCreateWorkOrders`; `canTriage` = `canTriageFaultReports`; `canViewWorkOrders` |
 | `useSendToContractor(estateId, reportId)` | POST `…/reports/{reportId}/work-order` `{ equipmentType, priority }` | invalidates `[userId, "estate-reports", estateId]` and `[userId, "work-orders", estateId]` |
 | `useDismissReport(estateId, reportId)` | POST `…/reports/{reportId}/dismiss` | same |
 | `useWorkOrderDispatch(estateId, workOrderId)` | GET `…/work-orders/{workOrderId}/dispatch` | `[userId, "work-orders", estateId, "dispatch", workOrderId]`; returns the dispatch or `null` |
@@ -63,15 +63,18 @@ and Security. `ROUTING_STATES` labels `CLASSIFYING` "Sorting".
     configured" reads "No plumbing contractor is set up for this estate." with
     a "Set one up" link to `/estates/$estateId/contractors` (managers only);
     "Confidence below threshold" reads "We weren't sure enough what kind of
-    problem this is."; other reasons show as sent. With `canCreateWorkOrders`:
-    - "Send to contractor" (`send-to-contractor-dialog.tsx`): "Contractor type"
+    problem this is."; other reasons show as sent. With `canCreateWorkOrders`
+    or `canTriageFaultReports` the card says "Waiting for you to decide" and shows:
+    - with `canCreateWorkOrders` only, "Send to contractor"
+      (`send-to-contractor-dialog.tsx`), since it creates a work order: "Contractor type"
       and "Priority" Selects, the type preselected from
       `CATEGORY_CONTRACTOR_TYPE[category]` (falling back to the
       classification's `equipmentType`; the dialog is keyed by it so a type
       change re-suggests), the recipient named before sending, and "Send work
       order". When the chosen type has no contractor it says so and links "Set
       up contractors";
-    - "Dismiss" (`dismiss-report-dialog.tsx`), confirmed with "Dismiss report";
+    - with `canTriageFaultReports` (Crew included; estate-role-permissions),
+      "Dismiss" (`dismiss-report-dialog.tsx`), confirmed with "Dismiss report";
   - `WORK_ORDER`: "Sent to a contractor" (or "Work order created" with no
     email), the work order reference (linked when `canViewWorkOrders`) and
     status, contractor, email status, approval, and "Retry sending" for
@@ -80,7 +83,7 @@ and Security. `ROUTING_STATES` labels `CLASSIFYING` "Sorting".
   The page header swaps "Create work order" for an outline "View work order"
   link once `routing.workOrder` exists.
 - **Change type** (`-components/change-category-dialog.tsx`, in the Details
-  card's Type row): shown with `canCreateWorkOrders` when the report has
+  card's Type row): shown with `canTriageFaultReports` (Crew included) when the report has
   routing that is not `CLASSIFYING`. A Dialog with a shadcn `RadioGroup` "Type
   of problem" of the ten `FAULT_CATEGORIES` and "Save type" (disabled until a
   different type is chosen). Calls `useChangeCategory`; server errors (409

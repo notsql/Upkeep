@@ -73,7 +73,7 @@ class InspectionResultsIntegrationTests extends InspectionTestSupport {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"MEMBER", "COUNCIL", "RESIDENT", "CUSTOM"})
+    @ValueSource(strings = {"COUNCIL", "RESIDENT", "CUSTOM"})
     void unrelatedEstateRolesCannotReadOrCreateInspectionResults(String role) throws Exception {
         var data = asset();
         var body = saved(data, "FAIL");
@@ -396,8 +396,9 @@ class InspectionResultsIntegrationTests extends InspectionTestSupport {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.items[0].id").value(data[2].toString()))
                 .andExpect(jsonPath("$.items[0].assetActive").value(false));
-        // Existing owner-only asset APIs deliberately hide records from other roles.
-        read("/estates/" + data[0] + "/assets/" + data[2], "limited-reader").andExpect(status().isNotFound());
+        // The asset register follows VIEW_ASSETS: Managers hold it, Crew do not (estate-role-permissions).
+        read("/estates/" + data[0] + "/assets/" + data[2], "limited-reader")
+                .andExpect(status().is(role.equals("MANAGER") ? 200 : 403));
     }
 
     @Test

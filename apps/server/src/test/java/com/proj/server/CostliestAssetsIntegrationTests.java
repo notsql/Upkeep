@@ -235,11 +235,19 @@ class CostliestAssetsIntegrationTests {
         top("owner").andExpect(status().isOk()).andExpect(jsonPath("$", hasSize(1)));
     }
 
+    // Cost views follow VIEW_COSTS: every Manager and Council hold it (estate-role-permissions).
     @ParameterizedTest
-    @ValueSource(strings = {"MANAGER", "COUNCIL", "MEMBER", "CREW"})
-    void onlyTheOwnerCanSeeIt(String role) throws Exception {
+    @ValueSource(strings = {"MANAGER", "COUNCIL"})
+    void managersAndCouncilCanSeeIt(String role) throws Exception {
         membership("someone", role);
-        top("someone").andExpect(status().isNotFound());
+        top("someone").andExpect(status().isOk());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"CREW"})
+    void membersWithoutViewCostsAreRefused(String role) throws Exception {
+        membership("someone", role);
+        top("someone").andExpect(status().isForbidden());
     }
 
     @Test

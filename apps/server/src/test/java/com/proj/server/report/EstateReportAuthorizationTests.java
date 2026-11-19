@@ -31,8 +31,8 @@ class EstateReportAuthorizationTests {
     @ValueSource(booleans = {false, true})
     void reportReadersCanReadRegardlessOfWhetherTheEstateIsLocked(boolean lock) {
         var estate = customMember(lock);
-        when(repository.hasPermission(estateId, "reader", EstatePermissionCode.VIEW_FAULT_REPORTS))
-                .thenReturn(true);
+        when(repository.codes(estateId, "reader"))
+                .thenReturn(java.util.Set.of(EstatePermissionCode.VIEW_FAULT_REPORTS));
 
         assertSame(estate, service.authorize(estateId, "reader", EstatePermissionCode.VIEW_FAULT_REPORTS, lock));
     }
@@ -41,8 +41,8 @@ class EstateReportAuthorizationTests {
     @ValueSource(booleans = {false, true})
     void readingPermissionNeverAuthorizesRelocationRegardlessOfLocking(boolean lock) {
         customMember(lock);
-        when(repository.hasPermission(estateId, "reader", EstatePermissionCode.VIEW_FAULT_REPORTS))
-                .thenReturn(true);
+        when(repository.codes(estateId, "reader"))
+                .thenReturn(java.util.Set.of(EstatePermissionCode.VIEW_FAULT_REPORTS));
 
         var error = assertThrows(
                 ResidentReportException.class,
@@ -54,8 +54,9 @@ class EstateReportAuthorizationTests {
     @ValueSource(booleans = {false, true})
     void relocationPermissionAuthorizesRelocationRegardlessOfLocking(boolean lock) {
         var estate = customMember(lock);
-        when(repository.hasPermission(estateId, "reader", EstatePermissionCode.RELOCATE_FAULT_REPORTS))
-                .thenReturn(true);
+        when(repository.codes(estateId, "reader"))
+                .thenReturn(java.util.Set.of(
+                        EstatePermissionCode.VIEW_FAULT_REPORTS, EstatePermissionCode.RELOCATE_FAULT_REPORTS));
 
         assertSame(estate, service.authorize(estateId, "reader", EstatePermissionCode.RELOCATE_FAULT_REPORTS, lock));
     }

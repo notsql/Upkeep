@@ -42,7 +42,7 @@ class InspectionCrewAccessIntegrationTests extends InspectionTestSupport {
         "PATCH, '', '{\"name\":\"Changed\",\"code\":\"CHANGED\",\"address\":\"Road\",\"postalCode\":\"123456\"}', 403",
         "POST, /deactivate, '{\"code\":\"%s\"}', 403",
         "POST, /ownership-transfer, '{\"newOwnerUserId\":\"other\"}', 403",
-        "POST, /locations, '{\"type\":\"BLOCK\",\"name\":\"New block\"}', 404",
+        "POST, /locations, '{\"type\":\"BLOCK\",\"name\":\"New block\"}', 403",
         "DELETE, /members/other, '{}', 403",
         "PUT, /members/other/role, '{\"role\":\"MANAGER\"}', 403"
     })

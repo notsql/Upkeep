@@ -105,7 +105,7 @@ class FaultReportLocationsIntegrationTests {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"COUNCIL", "RESIDENT", "MEMBER"})
+    @ValueSource(strings = {"COUNCIL", "RESIDENT"})
     void otherEstateRolesCannotReadImagesOrRelocateReports(String role) throws Exception {
         var estate = estate();
         member(estate, "staff", role);
@@ -215,7 +215,7 @@ class FaultReportLocationsIntegrationTests {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"COUNCIL", "RESIDENT", "MEMBER"})
+    @ValueSource(strings = {"COUNCIL", "RESIDENT"})
     void nonrespondersHaveNoFaultReportCapabilities(String role) throws Exception {
         var estate = estate();
         member(estate, "staff", role);
@@ -238,7 +238,7 @@ class FaultReportLocationsIntegrationTests {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"NONE", "MEMBER", "COUNCIL", "CREW", "MANAGER"})
+    @ValueSource(strings = {"NONE", "COUNCIL", "CREW", "MANAGER"})
     void migrationRestoresExistingOwnersManagerMembershipAndReportAccess(String previousRole) throws Exception {
         var estate = estate();
         db.execute("update \"Estate\" set \"ownerUserId\"='staff' where id=?", estate);
@@ -950,19 +950,20 @@ class FaultReportLocationsIntegrationTests {
         mvc.perform(asStaff(patch("/estates/" + estate + "/locations/" + level)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"name\":\"Changed\",\"parentId\":\"" + block + "\",\"sortOrder\":1}")))
-                .andExpect(status().isNotFound());
-        mvc.perform(asStaff(get("/estates/" + estate + "/assets"))).andExpect(status().isNotFound());
+                .andExpect(status().isForbidden()); // Crew lack EDIT_LOCATIONS.
+        // Crew lack VIEW_ASSETS and EDIT_ASSETS (estate-role-permissions).
+        mvc.perform(asStaff(get("/estates/" + estate + "/assets"))).andExpect(status().isForbidden());
         mvc.perform(asStaff(post("/estates/" + estate + "/assets")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"name\":\"Pump\",\"category\":\"PUMP\",\"locationId\":\"" + level + "\"}")))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isForbidden());
         mvc.perform(asStaff(post("/estates/" + estate + "/assets/" + asset + "/devices")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"identifier":"sensor-1","model":"Sensor","locationId":"%s",
                                  "metrics":["TEMPERATURE"],"reportingIntervalSeconds":60}
                                 """.formatted(level))))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isForbidden()); // Crew lack MANAGE_DEVICES.
         assertEquals("Level 4", db.fetchValue("select name from \"Location\" where id=?", level));
         assertEquals(
                 0L,

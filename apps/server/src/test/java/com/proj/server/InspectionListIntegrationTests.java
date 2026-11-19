@@ -395,13 +395,15 @@ class InspectionListIntegrationTests {
                 .andExpect(jsonPath("$.list.generatedByName").value("Morgan Lee"));
     }
 
+    // The due list follows VIEW_INSPECTIONS (Crew hold it); generating needs MANAGE_INSPECTIONS
+    // (estate-role-permissions). Members without a code get 403.
     @ParameterizedTest
-    @ValueSource(strings = {"CREW", "COUNCIL", "MEMBER"})
-    void otherEstateRolesFindNothing(String role) throws Exception {
+    @ValueSource(strings = {"CREW", "COUNCIL"})
+    void otherEstateRolesCannotGenerateTheList(String role) throws Exception {
         membership("staff", role);
         lamp("L-1");
-        list("staff").andExpect(status().isNotFound());
-        generate("staff").andExpect(status().isNotFound());
+        list("staff").andExpect(status().is(role.equals("CREW") ? 200 : 403));
+        generate("staff").andExpect(status().isForbidden());
         assertEquals(0, checks());
     }
 

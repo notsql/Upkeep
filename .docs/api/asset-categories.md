@@ -8,9 +8,11 @@ active-asset count. Package `com.proj.server.category`.
 
 ## Access
 
-Both endpoints require a bearer JWT subject (401 otherwise) and use `EstateRepository.findManaged`:
-the estate owner or a same-estate `MANAGER` member. A same-estate `RESIDENT` gets 403; CREW,
-COUNCIL, MEMBER, strangers and unknown estates get 404. Custom estate roles grant nothing here.
+Both endpoints require a bearer JWT subject (401 otherwise) and a permission code in the estate
+(estate-role-permissions): listing needs `VIEW_ASSETS` (owner, every Manager, Council); changing a
+category's interval or silent-failure flag needs `MANAGE_INSPECTIONS` (owner, every Manager).
+Custom roles hold what they are granted. Members without the code get 403; strangers and unknown
+estates get 404.
 Both paths are explicitly allowed in `SecurityConfig`.
 
 ## GET `/estates/{estateId}/asset-categories`

@@ -2,7 +2,7 @@
 
 Breakdown forecasts for an estate's assets. Paths are relative to
 `apps/web/src/`. There is no failure-risk page: forecasts show as the
-owner-only Risk flag column on Assets › By location and the forecast card on
+Risk flag column on Assets › By location (shown with `canViewAssets`) and the forecast card on
 the asset Overview (both in [assets.md](assets.md)), and the estate
 dashboard's "At-risk assets" card (footer link "Risk by location" to
 `/estates/$estateId/assets`).

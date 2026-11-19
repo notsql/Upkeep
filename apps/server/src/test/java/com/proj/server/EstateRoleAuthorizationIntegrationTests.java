@@ -175,17 +175,26 @@ class EstateRoleAuthorizationIntegrationTests {
 
     @ParameterizedTest
     @MethodSource("restoredEstateOperations")
-    void restoredOperationsRemainOwnerOnly(String method, String template, int success) throws Exception {
+    void restoredOperationsRefuseMembersWithoutTheirCodeAndHideTheEstateFromOthers(
+            String method, String template, int success) throws Exception {
         var a = estate("Private estate", "owner");
         var privateAsset = asset(a);
-        membership("member", a, "MEMBER");
-        membership("council", a, "COUNCIL");
-        for (var user : new String[] {"member", "council", "unrelated"}) {
+        // A Resident holds no permission codes (estate-role-permissions); Crew hold no asset codes.
+        membership("member", a, "RESIDENT");
+        membership("crew", a, "CREW");
+        // Crew hold RECORD_READINGS, so only the Resident is refused the anomaly check.
+        var refused = template.endsWith("/anomaly-check") ? new String[] {"member"} : new String[] {"member", "crew"};
+        for (var user : refused) {
             mvc.perform(asUser(managementRequest(method, template, a, privateAsset), user, "user"))
+                    .andExpect(status().isForbidden());
+        }
+        for (var user : new String[] {"unrelated", "platform-admin"}) {
+            mvc.perform(asUser(
+                            managementRequest(method, template, a, privateAsset),
+                            user,
+                            user.equals("platform-admin") ? "admin" : "user"))
                     .andExpect(status().isNotFound());
         }
-        mvc.perform(asUser(managementRequest(method, template, a, privateAsset), "platform-admin", "admin"))
-                .andExpect(status().isNotFound());
         assertEquals(0, db.fetchCount(ASSETEVENT));
         assertEquals(0, db.fetchCount(ASSETASSESSMENT));
         verifyNoInteractions(ml);
@@ -229,7 +238,7 @@ class EstateRoleAuthorizationIntegrationTests {
     }
 
     static Stream<Arguments> estateCreators() {
-        return Stream.of("UNASSIGNED", "RESIDENT", "CREW", "COUNCIL", "MEMBER", "MANAGER", "OWNER")
+        return Stream.of("UNASSIGNED", "RESIDENT", "CREW", "COUNCIL", "MANAGER", "OWNER")
                 .flatMap(membership ->
                         Stream.of("user", "resident", "admin").map(claim -> Arguments.of(membership, claim)));
     }
@@ -290,7 +299,7 @@ class EstateRoleAuthorizationIntegrationTests {
                     .andExpect(jsonPath("$.canSubmit").value(true))
                     .andExpect(jsonPath("$.estates[0].id").value(previous.toString()));
         }
-        if (role.equals("RESIDENT") || role.equals("CREW") || role.equals("COUNCIL") || role.equals("MEMBER")) {
+        if (role.equals("RESIDENT") || role.equals("CREW") || role.equals("COUNCIL")) {
             mvc.perform(
                             asUser(patch("/estates/" + previous), "creator", claim)
                                     .contentType(MediaType.APPLICATION_JSON)
@@ -398,7 +407,7 @@ class EstateRoleAuthorizationIntegrationTests {
         mvc.perform(asUser(get("/estates/" + councilEstate + "/locations"), "mixed-user", jwtRole))
                 .andExpect(status().isOk());
         mvc.perform(asUser(get("/estates/" + councilEstate + "/assets"), "mixed-user", jwtRole))
-                .andExpect(status().isNotFound()); // The existing asset API remains owner-only.
+                .andExpect(status().isOk()); // Council hold VIEW_ASSETS (estate-role-permissions).
         mvc.perform(asUser(get("/estates/" + ownedEstate + "/assets/" + ownedAsset), "mixed-user", jwtRole))
                 .andExpect(status().isOk());
         mvc.perform(asUser(get("/estates/" + UUID.randomUUID()), "mixed-user", jwtRole))
@@ -427,7 +436,7 @@ class EstateRoleAuthorizationIntegrationTests {
                 .andExpect(jsonPath("$.estates[?(@.estateId == '" + b + "')].canViewManagement")
                         .value(org.hamcrest.Matchers.contains(true)))
                 .andExpect(jsonPath("$.estates[?(@.estateId == '" + b + "')].canViewAssets")
-                        .value(org.hamcrest.Matchers.contains(false)))
+                        .value(org.hamcrest.Matchers.contains(true)))
                 .andExpect(jsonPath("$.estates[?(@.estateId == '" + c + "')].role")
                         .value(org.hamcrest.Matchers.contains("MANAGER")))
                 .andExpect(jsonPath("$.estates[?(@.estateId == '" + c + "')].canViewAssets")
@@ -630,9 +639,10 @@ class EstateRoleAuthorizationIntegrationTests {
         mvc.perform(get("/estates/" + a).with(token)).andExpect(status().isForbidden());
         db.execute("update \"EstateUser\" set role='COUNCIL' where \"estateId\"=? and \"userId\"='resident-a'", a);
         mvc.perform(get("/estates/" + a).with(token)).andExpect(status().isOk());
+        // Still a member (now Council), so the estate stays available for reports (estate-role-permissions).
         mvc.perform(get("/resident/context").with(token))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.estates").isEmpty())
+                .andExpect(jsonPath("$.estates[0].id").value(a.toString()))
                 .andExpect(jsonPath("$.canSubmit").value(true));
         mvc.perform(get("/resident/reports/" + reportId).with(token))
                 .andExpect(status().isOk())

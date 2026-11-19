@@ -62,7 +62,8 @@ class RoleInvitationsIntegrationTests {
     }
 
     @ParameterizedTest
-    @CsvSource({"COUNCIL,404", "MEMBER,404", "CREW,404", "RESIDENT,403", "UNASSIGNED,404", "OTHER_MANAGER,404"})
+    // Members without CREATE_LOCATIONS get 403; non-members 404 (estate-role-permissions).
+    @CsvSource({"COUNCIL,403", "CREW,403", "RESIDENT,403", "UNASSIGNED,404", "OTHER_MANAGER,404"})
     void otherRolesAndManagersOfOtherEstatesCannotCreateLocations(String role, int expected) throws Exception {
         if ("OTHER_MANAGER".equals(role)) {
             estates.create(
@@ -88,7 +89,8 @@ class RoleInvitationsIntegrationTests {
         } else {
             changeRole("owner", "manager", "COUNCIL", 200);
         }
-        createLocation("manager", "BLOCK", null, 404);
+        // Removed: no longer a member (404). Demoted to Council: a member without CREATE_LOCATIONS (403).
+        createLocation("manager", "BLOCK", null, remove ? 404 : 403);
         assertEquals(
                 1,
                 db.fetchCount(
@@ -98,7 +100,8 @@ class RoleInvitationsIntegrationTests {
 
     @ParameterizedTest
     @ValueSource(booleans = {false, true})
-    void formerOwnerCanCreateLocationsButCannotEditDeactivateOrTransfer(boolean legacyOwner) throws Exception {
+    void formerOwnerKeepsManagerLocationAccessButCannotDeactivateTheEstateOrTransfer(boolean legacyOwner)
+            throws Exception {
         if (legacyOwner) db.execute("delete from \"EstateUser\" where \"estateId\"=? and \"userId\"='owner'", estateId);
         transfer("owner", "manager", 200);
         UUID block = createLocation("owner", "BLOCK", null, 201);
@@ -106,9 +109,9 @@ class RoleInvitationsIntegrationTests {
                         .with(jwt().jwt(t -> t.subject("owner")))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"name\":\"Renamed block\"}"))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isOk()); // Still a Manager, so EDIT_LOCATIONS (estate-role-permissions).
         mvc.perform(post(path() + "/locations/" + block + "/deactivate").with(jwt().jwt(t -> t.subject("owner"))))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isOk());
         transfer("owner", "manager", 403);
         deactivate("owner", 403);
         deactivate("manager", 200);
@@ -161,7 +164,7 @@ class RoleInvitationsIntegrationTests {
     }
 
     @ParameterizedTest
-    @CsvSource({"COUNCIL,403", "MEMBER,403", "RESIDENT,403", "CREW,403", "UNASSIGNED,404", "OTHER_MANAGER,404"})
+    @CsvSource({"COUNCIL,403", "RESIDENT,403", "CREW,403", "UNASSIGNED,404", "OTHER_MANAGER,404"})
     void otherRolesAndManagersOfOtherEstatesCannotEditDetails(String role, int expected) throws Exception {
         if ("OTHER_MANAGER".equals(role)) {
             estates.create(
@@ -327,7 +330,7 @@ class RoleInvitationsIntegrationTests {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"COUNCIL", "RESIDENT", "CREW", "MEMBER"})
+    @ValueSource(strings = {"COUNCIL", "RESIDENT", "CREW"})
     void nonManagersCannotInviteEvenWithLegacyDelegation(String role) throws Exception {
         member("delegate", role);
         if (!role.equals("RESIDENT"))

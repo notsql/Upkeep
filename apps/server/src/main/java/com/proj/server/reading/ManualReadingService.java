@@ -3,6 +3,7 @@ package com.proj.server.reading;
 import com.proj.server.asset.AssetRepository;
 import com.proj.server.db.tables.records.ManualreadingRecord;
 import com.proj.server.device.DeviceMetric;
+import com.proj.server.estate.EstatePermissionCode;
 import com.proj.server.estate.EstatePermissions;
 import com.proj.server.workos.WorkOSService;
 import java.time.OffsetDateTime;
@@ -39,10 +40,8 @@ public class ManualReadingService {
         var name = workOS.findDisplayName(user)
                 .map(value -> value.length() > 200 ? value.substring(0, 200) : value)
                 .orElse(null);
-        var authority = EstatePermissions.authority(db, estate, user, true);
-        if (!authority.manager() && !"CREW".equals(authority.role()))
-            throw new ReadingException(
-                    HttpStatus.FORBIDDEN, "Owner, Manager or Crew access is required to record readings.");
+        EstatePermissions.require(db, estate, user, EstatePermissionCode.RECORD_READINGS, true);
+        var authority = EstatePermissions.authority(db, estate, user, false);
         // The estate lock serializes retries with lifecycle changes and other manual submissions.
         var existing = repository.find(estate, user, request.submissionId());
         if (existing.isPresent()) {

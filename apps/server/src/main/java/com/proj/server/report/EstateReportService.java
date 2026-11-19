@@ -8,7 +8,6 @@ import com.proj.server.routing.RoutingRepository;
 import com.proj.server.routing.RoutingState;
 import com.proj.server.storage.SignedDownloadResponse;
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 import org.jooq.Record;
 import org.springframework.http.HttpStatus;
@@ -43,16 +42,19 @@ public class EstateReportService {
         var estate = repository.estate(estateId, lock);
         if (estate == null) throw error(HttpStatus.NOT_FOUND, "Estate not found.");
         var role = repository.role(estateId, user, lock);
-        boolean customAllowed = "CUSTOM".equals(role) && repository.hasPermission(estateId, user, permission);
-        if (!"MANAGER".equals(role) && !"CREW".equals(role) && !customAllowed) {
-            boolean known = user.equals(estate.get("ownerUserId", String.class))
-                    || (role != null
-                            && Set.of("MEMBER", "COUNCIL", "RESIDENT", "CUSTOM").contains(role));
+        if (!repository.codes(estateId, user).contains(permission)) {
+            boolean known = user.equals(estate.get("ownerUserId", String.class)) || role != null;
             throw error(
                     known ? HttpStatus.FORBIDDEN : HttpStatus.NOT_FOUND,
-                    known ? "Responder membership required." : "Estate not found.");
+                    known ? "This estate permission is required: " + permission.name() : "Estate not found.");
         }
         return estate;
+    }
+
+    /** {@link #authorize} with a lock, plus an active estate: the shape of every triage write. */
+    public void authorizeActive(UUID estateId, String user, EstatePermissionCode permission) {
+        var estate = authorize(estateId, user, permission, true);
+        if (estate.get("deactivatedAt") != null) throw error(HttpStatus.CONFLICT, "This estate is inactive.");
     }
 
     public EstateIssueReportPageResponse list(
@@ -152,7 +154,7 @@ public class EstateReportService {
     @Transactional
     public EstateIssueReportDetailResponse review(
             UUID estateId, String user, UUID reportId, ReviewDuplicateRequest request) {
-        authorizeActiveManager(estateId, user);
+        authorizeActive(estateId, user, EstatePermissionCode.TRIAGE_FAULT_REPORTS);
         if (!duplicates.reportExists(estateId, reportId)) throw error(HttpStatus.NOT_FOUND, "Report not found.");
         var current = duplicates.lockedState(estateId, reportId);
         if (current == null) throw error(HttpStatus.NOT_FOUND, "This report is not linked to another report.");
@@ -169,7 +171,7 @@ public class EstateReportService {
     @Transactional
     public EstateIssueReportDetailResponse link(
             UUID estateId, String user, UUID reportId, LinkDuplicateRequest request) {
-        authorizeActiveManager(estateId, user);
+        authorizeActive(estateId, user, EstatePermissionCode.TRIAGE_FAULT_REPORTS);
         var originalId = request.originalReportId();
         if (!duplicates.reportExists(estateId, reportId)) throw error(HttpStatus.NOT_FOUND, "Report not found.");
         if (!duplicates.reportExists(estateId, originalId))
@@ -188,28 +190,11 @@ public class EstateReportService {
         return find(estateId, reportId);
     }
 
-    /** Reviewing and linking duplicates needs current MANAGER membership in an active estate. */
-    private static boolean reviewsDuplicates(String role) {
-        return "MANAGER".equals(role);
-    }
-
-    /** The permission half of {@link #authorizeActiveManager}, without locks or the active check. */
+    /** Reviewing and linking duplicates needs TRIAGE_FAULT_REPORTS; without locks or the active check. */
     @Transactional(readOnly = true)
     public boolean canReviewDuplicates(UUID estateId, String user) {
-        return repository.estate(estateId, false) != null && reviewsDuplicates(repository.role(estateId, user, false));
-    }
-
-    private void authorizeActiveManager(UUID estateId, String user) {
-        var estate = repository.estate(estateId, true);
-        if (estate == null) throw error(HttpStatus.NOT_FOUND, "Estate not found.");
-        var role = repository.role(estateId, user, true);
-        if (!reviewsDuplicates(role)) {
-            boolean known = user.equals(estate.get("ownerUserId", String.class)) || role != null;
-            throw error(
-                    known ? HttpStatus.FORBIDDEN : HttpStatus.NOT_FOUND,
-                    known ? "Manager membership required." : "Estate not found.");
-        }
-        if (estate.get("deactivatedAt") != null) throw error(HttpStatus.CONFLICT, "This estate is inactive.");
+        return repository.estate(estateId, false) != null
+                && repository.codes(estateId, user).contains(EstatePermissionCode.TRIAGE_FAULT_REPORTS);
     }
 
     EstateIssueReportDetailResponse find(UUID estateId, UUID reportId) {

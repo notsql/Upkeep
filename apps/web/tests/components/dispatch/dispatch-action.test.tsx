@@ -41,6 +41,22 @@ vi.mock("@tanstack/react-router", () => ({
   },
 }));
 
+// Sending crew is MANAGE_INSPECTIONS (estate-role-permissions).
+const access = vi.hoisted(() => ({ canManageInspections: true }));
+vi.mock("@/lib/access", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/access")>()),
+  useAppAccess: () => ({
+    data: {
+      estates: [
+        {
+          estateId: "estate",
+          canManageInspections: access.canManageInspections,
+        },
+      ],
+    },
+  }),
+}));
+
 let checks: InspectionCheck[];
 let openOrder: { id: string; reference: string } | null;
 
@@ -76,6 +92,7 @@ beforeEach(() => {
   vi.mocked(api.POST).mockReset();
   toastSuccess.mockReset();
   checks = [];
+  access.canManageInspections = true;
   openOrder = null;
   inspectors = everyone;
   vi.mocked(api.GET).mockImplementation(((path: string) => {
@@ -241,6 +258,18 @@ describe("DispatchAction: send crew", () => {
 
   it("asks a reader who cannot send to ask someone", async () => {
     renderAction("CREW", false);
+    await screen.findByText("Ask a Manager or a Facilities lead to send crew.");
+    expect(
+      screen.queryByRole("button", { name: "Send crew to inspect" })
+    ).toBeNull();
+  });
+});
+
+describe("DispatchAction: send crew without managing inspections", () => {
+  // A custom role may create work orders without MANAGE_INSPECTIONS.
+  it("asks a reader who can send contractors but not crew to ask someone", async () => {
+    access.canManageInspections = false;
+    renderAction("CREW");
     await screen.findByText("Ask a Manager or a Facilities lead to send crew.");
     expect(
       screen.queryByRole("button", { name: "Send crew to inspect" })

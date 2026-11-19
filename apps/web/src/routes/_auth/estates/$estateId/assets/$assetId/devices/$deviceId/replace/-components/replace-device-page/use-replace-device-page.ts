@@ -1,6 +1,7 @@
 import { useNavigate } from "@tanstack/react-router";
 import { useCallback } from "react";
 import { toast } from "sonner";
+import { useAppAccess } from "@/lib/access";
 import { useAsset } from "@/lib/assets";
 import { type DeviceInput, useDevices, useReplaceDevice } from "@/lib/devices";
 import { useEstate } from "@/lib/estates";
@@ -11,6 +12,12 @@ export function useReplaceDevicePage(
   deviceId: string
 ) {
   const estate = useEstate(estateId);
+  const access = useAppAccess();
+  // Registering and replacing devices need MANAGE_DEVICES (estate-role-permissions).
+  const canManageDevices = Boolean(
+    access.data?.estates.find((item) => item.estateId === estateId)
+      ?.canManageDevices
+  );
   const asset = useAsset(estateId, assetId);
   const devices = useDevices(estateId, assetId);
   const replace = useReplaceDevice(estateId, assetId, deviceId);
@@ -37,7 +44,8 @@ export function useReplaceDevicePage(
   const error = estate.error ?? asset.error ?? devices.error;
   const loading = estate.isPending || asset.isPending || devices.isPending;
   const allowed =
-    estate.data?.owned &&
+    canManageDevices &&
+    estate.data &&
     !estate.data.deactivatedAt &&
     asset.data &&
     !asset.data.deactivatedAt;

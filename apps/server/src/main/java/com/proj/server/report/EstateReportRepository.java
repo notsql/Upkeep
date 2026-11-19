@@ -8,6 +8,8 @@ import static org.jooq.impl.DSL.field;
 import static org.jooq.impl.DSL.function;
 import static org.jooq.impl.DSL.name;
 
+import com.proj.server.estate.EstatePermissionCode;
+import com.proj.server.estate.EstatePermissions;
 import java.util.UUID;
 import org.jooq.DSLContext;
 import org.jooq.Record;
@@ -21,6 +23,11 @@ public class EstateReportRepository {
         this.db = db;
     }
 
+    /** The permission codes {@code user} holds in the estate (estate-role-permissions). */
+    public java.util.Set<EstatePermissionCode> codes(UUID estateId, String user) {
+        return EstatePermissions.effective(db, estateId, user);
+    }
+
     public Record estate(UUID estateId, boolean lock) {
         var query =
                 db.select(ESTATE.OWNERUSERID, ESTATE.DEACTIVATEDAT).from(ESTATE).where(ESTATE.ID.eq(estateId));
@@ -32,10 +39,6 @@ public class EstateReportRepository {
                 .from(ESTATEUSER)
                 .where(ESTATEUSER.ESTATEID.eq(estateId).and(ESTATEUSER.USERID.eq(user)));
         return lock ? query.forUpdate().fetchOne(ESTATEUSER.ROLE) : query.fetchOne(ESTATEUSER.ROLE);
-    }
-
-    public boolean hasPermission(UUID estateId, String user, com.proj.server.estate.EstatePermissionCode permission) {
-        return com.proj.server.estate.EstatePermissions.has(db, estateId, user, permission);
     }
 
     public Record location(UUID estateId, UUID locationId) {

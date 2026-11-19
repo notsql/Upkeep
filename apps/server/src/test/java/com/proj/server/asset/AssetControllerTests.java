@@ -14,6 +14,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.proj.server.catalogue.CatalogueRepository;
 import com.proj.server.config.SecurityConfig;
 import com.proj.server.db.tables.records.AssetRecord;
+import com.proj.server.estate.EstatePermissionCode;
 import com.proj.server.estate.EstateRepository;
 import com.proj.server.estate.EstateResponse;
 import com.proj.server.location.LocationRepository;
@@ -31,11 +32,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
+import org.springframework.web.server.ResponseStatusException;
 
 @WebMvcTest(
         controllers = AssetController.class,
@@ -116,8 +119,9 @@ class AssetControllerTests {
         // The seeded AssetCategory rows these tests use; any other code (e.g. ROCKET) is unknown.
         when(catalogue.categoryExists("LIFT")).thenReturn(true);
         when(catalogue.categoryExists("PUMP")).thenReturn(true);
-        when(estates.findOwned(estateId, "owner", false)).thenReturn(Optional.of(estate(null)));
-        when(estates.findOwned(estateId, "owner", true)).thenReturn(Optional.of(estate(null)));
+        when(estates.require(eq(estateId), eq("owner"), any(), anyBoolean())).thenReturn(estate(null));
+        when(estates.require(eq(estateId), eq("other"), any(), anyBoolean()))
+                .thenThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "Estate not found."));
         when(locations.find(blockId, estateId))
                 .thenReturn(Optional.of(location(blockId, LocationType.BLOCK, null, "Blk 101", null)));
         when(locations.find(levelId, estateId))
@@ -221,7 +225,8 @@ class AssetControllerTests {
 
     @Test
     void rejectsChangesInAnInactiveEstate() throws Exception {
-        when(estates.findOwned(estateId, "owner", true)).thenReturn(Optional.of(estate(now)));
+        when(estates.require(eq(estateId), eq("owner"), eq(EstatePermissionCode.EDIT_ASSETS), eq(true)))
+                .thenReturn(estate(now));
         mvc.perform(asOwner(post(base), body(lobbyId))).andExpect(status().isConflict());
         mvc.perform(asOwner(patch(one), body(lobbyId))).andExpect(status().isConflict());
         mvc.perform(asOwner(post(one + "/deactivate"), deactivation("SUNRISE-A0001")))
@@ -256,7 +261,7 @@ class AssetControllerTests {
         createEchoesTheRequest();
         mvc.perform(asOwner(post(base), body(lobbyId))).andExpect(status().isCreated());
         var order = inOrder(estates, repository);
-        order.verify(estates).findOwned(estateId, "owner", true);
+        order.verify(estates).require(estateId, "owner", EstatePermissionCode.EDIT_ASSETS, true);
         order.verify(repository).count(estateId);
     }
 
@@ -365,7 +370,7 @@ class AssetControllerTests {
         when(repository.update(any(), any())).thenReturn(asset(lobbyId, null));
         mvc.perform(asOwner(patch(one), body(lobbyId))).andExpect(status().isOk());
         var order = inOrder(estates, repository);
-        order.verify(estates).findOwned(estateId, "owner", true);
+        order.verify(estates).require(estateId, "owner", EstatePermissionCode.EDIT_ASSETS, true);
         order.verify(repository).find(assetId, estateId, true);
         order.verify(repository).update(any(), any());
     }

@@ -16,10 +16,13 @@ import { DeviceItem } from "@/routes/_auth/estates/$estateId/assets/$assetId/-co
 export function AssetDevicesSection({
   assetId,
   canRegister,
+  canViewReadings,
   estateId,
 }: {
   assetId: string;
   canRegister: boolean;
+  /** Links to the asset's readings (VIEW_READINGS). */
+  canViewReadings: boolean;
   estateId: string;
 }) {
   const devices = useDevices(estateId, assetId);
@@ -44,14 +47,16 @@ export function AssetDevicesSection({
     <PageSection
       actions={
         <>
-          <Link
-            className={sectionActionClassName}
-            params={{ estateId, assetId }}
-            to="/estates/$estateId/readings/$assetId"
-          >
-            <Activity aria-hidden="true" />
-            Readings
-          </Link>
+          {canViewReadings ? (
+            <Link
+              className={sectionActionClassName}
+              params={{ estateId, assetId }}
+              to="/estates/$estateId/readings/$assetId"
+            >
+              <Activity aria-hidden="true" />
+              Readings
+            </Link>
+          ) : null}
           {canRegister ? (
             <Link
               className={sectionActionClassName}

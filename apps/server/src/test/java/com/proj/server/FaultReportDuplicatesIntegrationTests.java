@@ -429,8 +429,8 @@ class FaultReportDuplicatesIntegrationTests {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"CREW", "COUNCIL", "RESIDENT", "MEMBER", "CUSTOM"})
-    void onlyManagersReviewOrLink(String role) throws Exception {
+    @ValueSource(strings = {"COUNCIL", "RESIDENT", "CUSTOM"})
+    void membersWithoutTriageCannotReviewOrLink(String role) throws Exception {
         var f = fixture();
         if (role.equals("CUSTOM")) customMember(f.estate, "staff");
         else member(f.estate, "staff", role);
@@ -718,7 +718,8 @@ class FaultReportDuplicatesIntegrationTests {
     // ---- Access context --------------------------------------------------------------------
 
     @ParameterizedTest
-    @CsvSource({"MANAGER,false,true", "MANAGER,true,false", "CREW,false,false", "COUNCIL,false,false"})
+    // Duplicate review follows TRIAGE_FAULT_REPORTS: Managers and Crew (estate-role-permissions).
+    @CsvSource({"MANAGER,false,true", "MANAGER,true,false", "CREW,false,true", "COUNCIL,false,false"})
     void accessContextExposesTheReviewCapability(String role, boolean inactive, boolean expected) throws Exception {
         var f = fixture();
         member(f.estate, "staff", role);

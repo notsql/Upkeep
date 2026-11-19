@@ -4,6 +4,8 @@ import static com.proj.server.db.tables.Estate.ESTATE;
 import static com.proj.server.db.tables.Estateroledefinition.ESTATEROLEDEFINITION;
 import static com.proj.server.db.tables.Estateuser.ESTATEUSER;
 
+import com.proj.server.estate.EstatePermissionCode;
+import com.proj.server.estate.EstatePermissions;
 import com.proj.server.estate.EstateRepository;
 import com.proj.server.flatline.FlatlineService;
 import com.proj.server.report.EstateReportService;
@@ -26,9 +28,9 @@ import org.springframework.web.server.ResponseStatusException;
 @Service
 public class WhoCanHelpService {
     static final String OWNER = "estate owner";
-    private static final List<String> PRESET_ORDER = List.of("MANAGER", "CREW", "COUNCIL", "MEMBER", "RESIDENT");
-    private static final Map<String, String> PRESET_NAMES = Map.of(
-            "MANAGER", "Manager", "CREW", "Crew", "COUNCIL", "Council", "MEMBER", "Member", "RESIDENT", "Resident");
+    private static final List<String> PRESET_ORDER = List.of("MANAGER", "CREW", "COUNCIL", "RESIDENT");
+    private static final Map<String, String> PRESET_NAMES =
+            Map.of("MANAGER", "Manager", "CREW", "Crew", "COUNCIL", "Council", "RESIDENT", "Resident");
 
     private final DSLContext db;
     private final EstateRepository estates;
@@ -96,13 +98,18 @@ public class WhoCanHelpService {
     private boolean allowed(HelpAction action, UUID estateId, String user) {
         try {
             return switch (action) {
-                // DeviceService and AssetAssessmentService guard with findOwned.
-                case REPLACE_SENSOR, GENERATE_CONNECTION_KEY, RECORD_CONDITION ->
-                    estates.findOwned(estateId, user, false).isPresent();
+                // DeviceService requires MANAGE_DEVICES (estate-role-permissions).
+                case REPLACE_SENSOR, GENERATE_CONNECTION_KEY ->
+                    EstatePermissions.effective(db, estateId, user).contains(EstatePermissionCode.MANAGE_DEVICES);
+                // AssetAssessmentService requires RECORD_READINGS (estate-role-permissions).
+                case RECORD_CONDITION ->
+                    EstatePermissions.effective(db, estateId, user).contains(EstatePermissionCode.RECORD_READINGS);
                 case PAUSE_SENSOR_WARNINGS -> flatlines.canPause(estateId, user);
-                // Notification visibility and the inspection list both use managerEstates via findManaged.
-                case ACKNOWLEDGE_ALERT, SEND_CREW ->
-                    estates.findManaged(estateId, user).isPresent();
+                // Notification visibility uses managerEstates via findManaged.
+                case ACKNOWLEDGE_ALERT -> estates.findManaged(estateId, user).isPresent();
+                // InspectionListService requires MANAGE_INSPECTIONS to send crew (estate-role-permissions).
+                case SEND_CREW ->
+                    EstatePermissions.effective(db, estateId, user).contains(EstatePermissionCode.MANAGE_INSPECTIONS);
                 case REVIEW_DUPLICATE -> reports.canReviewDuplicates(estateId, user);
                 case SEND_CONTRACTOR -> workOrders.canCreate(estateId, user);
             };

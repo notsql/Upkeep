@@ -23,8 +23,8 @@ class WorkOrderDocumentsIntegrationTests extends CustomEstateRoleTestSupport {
     }
 
     @Test
-    void unlinkedDocumentCanAttachToClosedWorkWithoutChangingOutcomeOrStatusAndSupportsCrewReads() throws Exception {
-        UUID document = document(estateId, "crew");
+    void unlinkedDocumentCanAttachToClosedWorkWithoutChangingOutcomeOrStatus() throws Exception {
+        UUID document = document(estateId, "manager");
         UUID order = order();
         send(
                         "owner",
@@ -62,12 +62,12 @@ class WorkOrderDocumentsIntegrationTests extends CustomEstateRoleTestSupport {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.workOrderId").value(order.toString()))
                 .andExpect(jsonPath("$.associationVersion").value(1));
-        mvc.perform(as("crew", get(attachments(order))))
+        mvc.perform(as("manager", get(attachments(order))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.items[0].id").value(document.toString()))
                 .andExpect(jsonPath("$.items[0].originalFilename").value("invoice.pdf"))
                 .andExpect(jsonPath("$.items[0].storageKey").doesNotExist());
-        mvc.perform(as("crew", get(association(document) + "/history")))
+        mvc.perform(as("manager", get(association(document) + "/history")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.items[0].toWorkOrderId").value(order.toString()))
                 .andExpect(jsonPath("$.items[0].fromWorkOrderId").isEmpty())
@@ -95,9 +95,9 @@ class WorkOrderDocumentsIntegrationTests extends CustomEstateRoleTestSupport {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.associationVersion").value(2));
         associate(document, first, 1, "Stale edit", "manager").andExpect(status().isConflict());
-        mvc.perform(as("crew", get(attachments(first))))
+        mvc.perform(as("manager", get(attachments(first))))
                 .andExpect(jsonPath("$.items.length()").value(0));
-        mvc.perform(as("crew", get(attachments(second))))
+        mvc.perform(as("manager", get(attachments(second))))
                 .andExpect(jsonPath("$.items.length()").value(1));
         associate(document, null, 2, null, "manager").andExpect(status().isBadRequest());
         associate(document, null, 2, "Not relevant to this job", "manager")
@@ -139,14 +139,14 @@ class WorkOrderDocumentsIntegrationTests extends CustomEstateRoleTestSupport {
 
     @Test
     void foreignDeletedAndInactiveDocumentsCannotBeLinkedAndDeletedAttachmentsDisappear() throws Exception {
-        UUID document = document(estateId, "crew");
+        UUID document = document(estateId, "manager");
         UUID order = order();
         UUID foreignEstate = estate("owner");
         UUID foreignDocument = document(foreignEstate, "owner");
         associate(foreignDocument, order, 0, null, "owner").andExpect(status().isNotFound());
         associate(document, UUID.randomUUID(), 0, null, "owner").andExpect(status().isNotFound());
         associate(document, order, 0, null, "owner").andExpect(status().isOk());
-        mvc.perform(as("crew", delete(path() + "/documents/" + document))).andExpect(status().isNoContent());
+        mvc.perform(as("manager", delete(path() + "/documents/" + document))).andExpect(status().isNoContent());
         mvc.perform(as("owner", get(attachments(order))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.items.length()").value(0));
@@ -159,7 +159,7 @@ class WorkOrderDocumentsIntegrationTests extends CustomEstateRoleTestSupport {
         UUID available = document(estateId, "owner");
         inactive();
         associate(available, order, 0, null, "owner").andExpect(status().isConflict());
-        mvc.perform(as("crew", get(attachments(order)))).andExpect(status().isOk());
+        mvc.perform(as("manager", get(attachments(order)))).andExpect(status().isOk());
     }
 
     @Test
@@ -191,33 +191,35 @@ class WorkOrderDocumentsIntegrationTests extends CustomEstateRoleTestSupport {
         UUID other = order();
         associate(first, order, 0, null, "owner").andExpect(status().isOk());
         associate(second, order, 0, null, "owner").andExpect(status().isOk());
-        var page = body(mvc.perform(as("crew", get(attachments(order)).param("limit", "1")))
+        var page = body(mvc.perform(as("manager", get(attachments(order)).param("limit", "1")))
                 .andExpect(status().isOk()));
         String cursor = page.get("nextCursor").asText();
-        var next = body(mvc.perform(
-                        as("crew", get(attachments(order)).param("limit", "1").param("cursor", cursor)))
+        var next = body(mvc.perform(as(
+                        "manager", get(attachments(order)).param("limit", "1").param("cursor", cursor)))
                 .andExpect(status().isOk()));
         assertNotEquals(
                 page.get("items").get(0).get("id"), next.get("items").get(0).get("id"));
         assertTrue(next.get("nextCursor").isNull());
-        mvc.perform(as("crew", get(attachments(other)).param("cursor", cursor))).andExpect(status().isBadRequest());
-        mvc.perform(as("crew", get(association(first) + "/history").param("cursor", cursor)))
+        mvc.perform(as("manager", get(attachments(other)).param("cursor", cursor)))
+                .andExpect(status().isBadRequest());
+        mvc.perform(as("manager", get(association(first) + "/history").param("cursor", cursor)))
                 .andExpect(status().isBadRequest());
         associate(first, other, 1, "Correct job", "owner").andExpect(status().isOk());
-        var history =
-                body(mvc.perform(as("crew", get(association(first) + "/history").param("limit", "1")))
+        var history = body(
+                mvc.perform(as("manager", get(association(first) + "/history").param("limit", "1")))
                         .andExpect(status().isOk()));
         assertEquals(1, history.get("items").get(0).get("associationVersion").asInt());
         String historyCursor = history.get("nextCursor").asText();
         mvc.perform(as(
-                        "crew",
+                        "manager",
                         get(association(first) + "/history").param("limit", "1").param("cursor", historyCursor)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.items[0].associationVersion").value(2));
-        mvc.perform(as("crew", get(association(second) + "/history").param("cursor", historyCursor)))
+        mvc.perform(as("manager", get(association(second) + "/history").param("cursor", historyCursor)))
                 .andExpect(status().isBadRequest());
-        mvc.perform(as("crew", get(attachments(order)).param("limit", "101"))).andExpect(status().isBadRequest());
-        mvc.perform(as("crew", get(association(first) + "/history").param("cursor", "invalid")))
+        mvc.perform(as("manager", get(attachments(order)).param("limit", "101")))
+                .andExpect(status().isBadRequest());
+        mvc.perform(as("manager", get(association(first) + "/history").param("cursor", "invalid")))
                 .andExpect(status().isBadRequest());
     }
 
@@ -338,5 +340,15 @@ class WorkOrderDocumentsIntegrationTests extends CustomEstateRoleTestSupport {
         request.put("expectedAssociationVersion", version);
         request.put("correctionReason", reason);
         return send(user, put(association(document)), request);
+    }
+
+    // Attachments are invoices and service reports, which Crew do not hold (estate-role-permissions).
+    @Test
+    void crewCannotSeeAWorkOrdersAttachments() throws Exception {
+        UUID document = document(estateId, "owner");
+        UUID order = order();
+        associate(document, order, 0, null, "owner").andExpect(status().isOk());
+        mvc.perform(as("crew", get(attachments(order)))).andExpect(status().isForbidden());
+        mvc.perform(as("crew", get(association(document) + "/history"))).andExpect(status().isForbidden());
     }
 }

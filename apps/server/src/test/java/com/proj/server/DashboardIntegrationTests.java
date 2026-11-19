@@ -74,7 +74,9 @@ class DashboardIntegrationTests {
     }
 
     void share(UUID estate, String user) {
-        db.execute("insert into \"EstateUser\" (\"estateId\", \"userId\") values (?, ?)", estate, user);
+        // The role column has no default since MEMBER was retired; a shared estate is a Council one.
+        db.execute(
+                "insert into \"EstateUser\" (\"estateId\", \"userId\", role) values (?, ?, 'COUNCIL')", estate, user);
     }
 
     @Test

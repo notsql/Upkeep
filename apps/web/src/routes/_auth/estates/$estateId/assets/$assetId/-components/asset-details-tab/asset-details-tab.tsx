@@ -9,6 +9,7 @@ import {
   sectionActionClassName,
 } from "@/components/page/section-card";
 import { SectionHeading } from "@/components/page/section-heading";
+import { useAppAccess } from "@/lib/access";
 import type { Asset } from "@/lib/assets";
 import { useAssetCategories } from "@/lib/catalogue";
 import { formatDate } from "@/lib/format";
@@ -78,15 +79,22 @@ export function AssetDetailsTab({
 }) {
   const { asset, closeConfirmation, confirm, confirming, openConfirmation } =
     useAssetDetailsTab(estateId, assetId);
+  const access = useAppAccess();
+  // Editing and retiring need EDIT_ASSETS (estate-role-permissions).
+  const canEdit = Boolean(
+    access.data?.estates.find((item) => item.estateId === estateId)
+      ?.canEditAssets
+  );
   if (!asset.data) {
     return null;
   }
   const active = !asset.data.deactivatedAt;
+  const editable = active && canEdit;
   return (
     <>
       <PageSection
         actions={
-          active ? (
+          editable ? (
             <Link
               className={sectionActionClassName}
               params={{ estateId, assetId }}
@@ -103,8 +111,8 @@ export function AssetDetailsTab({
         <AssetFacts asset={asset.data} />
       </PageSection>
       <Separator />
-      <AssetRetirementPanel asset={asset.data} />
-      {active ? <RetireZone onRetire={openConfirmation} /> : null}
+      <AssetRetirementPanel asset={asset.data} canEdit={canEdit} />
+      {editable ? <RetireZone onRetire={openConfirmation} /> : null}
       {confirming ? (
         <DeactivateAssetDialog
           installedOn={asset.data.installedOn}

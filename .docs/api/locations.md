@@ -5,19 +5,19 @@ JWT subject. Estate and location IDs are UUIDs.
 
 | Method | Path | Request | Success | Access |
 | --- | --- | --- | --- | --- |
-| GET | `/estates/{estateId}/locations` | Optional query `includeInactive: boolean`, default false | 200 `LocationResponse[]` | Owner or current management member/responder for active rows; owner or MANAGER/CREW responder with `includeInactive=true` |
-| POST | `/estates/{estateId}/locations` | `CreateLocationRequest` | 201 `LocationResponse`, Location header | Owner, assigned MANAGER or custom CREATE_LOCATIONS, active estate |
-| PATCH | `/estates/{estateId}/locations/{id}` | `UpdateLocationRequest` | 200 `LocationResponse` | Owner or custom EDIT_LOCATIONS, active estate/location |
-| POST | `/estates/{estateId}/locations/{id}/deactivate` | none | 200 `LocationResponse` | Owner, active estate |
-| POST | `/estates/{estateId}/locations/{blockId}/floors` | `AddFloorsRequest` | 200 `AddFloorsResponse` | Owner or custom CREATE_LOCATIONS, active estate and block |
+| GET | `/estates/{estateId}/locations` | Optional query `includeInactive: boolean`, default false | 200 `LocationResponse[]` | Owner or current management member/responder for active rows; with `includeInactive=true`, `VIEW_ASSETS` or `EDIT_LOCATIONS` holders, or MANAGER/CREW report responders (others 403) |
+| POST | `/estates/{estateId}/locations` | `CreateLocationRequest` | 201 `LocationResponse`, Location header | `CREATE_LOCATIONS` (owner, every Manager, custom roles granted it), active estate |
+| PATCH | `/estates/{estateId}/locations/{id}` | `UpdateLocationRequest` | 200 `LocationResponse` | `EDIT_LOCATIONS` (owner, every Manager, custom roles granted it), active estate/location |
+| POST | `/estates/{estateId}/locations/{id}/deactivate` | none | 200 `LocationResponse` | `EDIT_LOCATIONS`, active estate |
+| POST | `/estates/{estateId}/locations/{blockId}/floors` | `AddFloorsRequest` | 200 `AddFloorsResponse` | `CREATE_LOCATIONS`, active estate and block |
 
 Invited members must accept before reading. Removing membership immediately
 denies subsequent reads. Invitation delegation does not confer location-write
 permission. Reads list active locations, including on an inactive estate.
 Owners and current Managers assigned to the target estate can create blocks,
-levels and common areas. Council/legacy MEMBER/Crew/Resident/unassigned users
+levels and common areas. Council/Crew/Resident/unassigned users
 cannot create; being a Manager in another estate grants no creation authority.
-Location editing also permits custom EDIT_LOCATIONS; deactivation remains owner-only. The UI uses separate canCreateLocations/canCreateFloors/canEditLocations flags.
+Editing and deactivation need `EDIT_LOCATIONS` (estate-role-permissions): the owner, every Manager and custom roles granted it. Members without the code get 403; non-members 404. The UI uses separate canCreateLocations/canCreateFloors/canEditLocations flags.
 
 Creation locks the estate before checking current ownership/Manager membership
 and active status, serializing against member removal/demotion, ownership
@@ -26,9 +26,10 @@ same token. After transfer, the former owner retains creation access through
 their MANAGER membership; only the current owner can transfer ownership or
 deactivate the estate. No creation is allowed in inactive estates (409).
 
-Owners and current MANAGER/CREW responders can use `includeInactive=true` to
-include deactivated locations for historical assets/reports. Other members
-cannot use that option (404). Crew's supporting reads do not grant management
+Owners, current MANAGER/CREW responders and holders of `VIEW_ASSETS` (Council,
+whose asset register shows assets in deactivated locations) or `EDIT_LOCATIONS`
+can use `includeInactive=true` to include deactivated locations for historical
+assets/reports. Other members get 403; non-members 404. Crew's supporting reads do not grant management
 estate, asset, location or device writes. Inactive-estate reads are allowed.
 
 ## DTOs
@@ -76,7 +77,7 @@ Example: an authenticated owner or assigned Manager sends POST `/estates/{estate
 `{"type":"BLOCK","name":"Block A"}`. The 201 response contains the new
 `LocationResponse`. POST `/estates/{estateId}/locations/{blockId}/floors` with
 `{"lowestFloor":-2,"highestFloor":3}` creates L3, L2, L1, B1 and B2. After accepting an invitation, a member can GET the same
-collection and see Block A. Accepted MANAGER or custom CREATE_LOCATIONS additionally permits creation; custom EDIT_LOCATIONS additionally permits editing. Deactivation still requires ownership.
+collection and see Block A. Every Manager and custom CREATE_LOCATIONS holders may create; every Manager and custom EDIT_LOCATIONS holders may edit and deactivate.
 
 A resident membership in the target estate returns 403 on management requests, including a conflicting owner/RESIDENT row. Management access in another estate does not change this restriction. Unrelated estates retain 404.
 

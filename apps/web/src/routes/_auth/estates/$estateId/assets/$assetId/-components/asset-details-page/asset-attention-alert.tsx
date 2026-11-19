@@ -32,6 +32,7 @@ export function AssetAttentionAlert({
   assetName,
   canInspect,
   canSend,
+  canViewCondition,
   estateId,
 }: {
   /** The asset and estate are active. */
@@ -42,10 +43,12 @@ export function AssetAttentionAlert({
   canInspect: boolean;
   /** The asset and estate are active and the viewer can send crew or a contractor. */
   canSend: boolean;
+  /** Can read assessments (VIEW_READINGS); without it nothing is requested or shown. */
+  canViewCondition: boolean;
   estateId: string;
 }) {
   // The API returns the current assessment first.
-  const current = useAssessments(estateId, assetId).data?.[0];
+  const current = useAssessments(estateId, assetId, canViewCondition).data?.[0];
   const risk = useAssetFailureRisk(estateId, assetId, active);
   const route = dispatchRoute(risk.data?.flagReasons ?? []) ?? "CREW";
   const tone = current ? BANNER_TONES[current.condition] : undefined;

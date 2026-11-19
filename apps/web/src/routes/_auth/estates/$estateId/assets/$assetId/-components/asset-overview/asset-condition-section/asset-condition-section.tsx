@@ -68,11 +68,15 @@ function CurrentCondition({ current }: { current: Assessment | undefined }) {
 export function AssetConditionSection({
   assetId,
   canRecord,
+  canView,
   estateId,
   upcoming,
 }: {
   assetId: string;
+  /** Can record a condition check (RECORD_READINGS). */
   canRecord: boolean;
+  /** Can see assessments (VIEW_READINGS); without it only `upcoming` shows. */
+  canView: boolean;
   estateId: string;
   /** Work coming up, shown under the condition as a sub-section. */
   upcoming?: ReactNode;
@@ -86,7 +90,7 @@ export function AssetConditionSection({
     recording,
     retry,
     save,
-  } = useAssetConditionSection(estateId, assetId);
+  } = useAssetConditionSection(estateId, assetId, canView);
 
   return (
     <Dialog onOpenChange={changeOpen} open={recording && canRecord}>
@@ -104,7 +108,7 @@ export function AssetConditionSection({
         title="Condition"
       >
         <div className="flex flex-col gap-4">
-          {assessments.isPending ? (
+          {canView && assessments.isPending ? (
             <LoadingState label="Loading condition…" rows={2} />
           ) : null}
           {assessments.error ? (
@@ -141,7 +145,7 @@ export function AssetConditionSection({
           ) : null}
           {upcoming ? (
             <>
-              <Separator />
+              {canView ? <Separator /> : null}
               {upcoming}
             </>
           ) : null}

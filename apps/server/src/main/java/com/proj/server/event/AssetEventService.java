@@ -4,6 +4,7 @@ import com.proj.server.asset.AssetRepository;
 import com.proj.server.catalogue.CatalogueRepository;
 import com.proj.server.db.tables.records.AssetRecord;
 import com.proj.server.db.tables.records.AsseteventRecord;
+import com.proj.server.estate.EstatePermissionCode;
 import com.proj.server.estate.EstateRepository;
 import com.proj.server.risk.FailureRiskCalculator;
 import com.proj.server.risk.RiskAsset;
@@ -50,7 +51,7 @@ public class AssetEventService {
 
     /** Includes a deactivated asset's events: they are kept, only closed to new entries. */
     public List<AssetEventResponse> list(UUID estateId, UUID assetId, String owner) {
-        estates.findOwned(estateId, owner, false).orElseThrow(AssetEventService::estateNotFound);
+        estates.require(estateId, owner, EstatePermissionCode.VIEW_ASSETS, false);
         var asset = assets.find(assetId, estateId, false).orElseThrow(AssetEventService::assetNotFound);
         var names = new Names(catalogue);
         return repository.listForAsset(assetId).stream()
@@ -67,7 +68,7 @@ public class AssetEventService {
         // Looked up before any row is locked, so a slow WorkOS call never holds a lock.
         var recordedByName = workOS.findDisplayName(owner).orElse(null);
 
-        var estate = estates.findOwned(estateId, owner, true).orElseThrow(AssetEventService::estateNotFound);
+        var estate = estates.require(estateId, owner, EstatePermissionCode.EDIT_ASSETS, true);
         if (estate.deactivatedAt() != null) {
             throw new AssetEventException(
                     HttpStatus.CONFLICT, "This estate is inactive. Its assets cannot have new events.");
@@ -161,10 +162,6 @@ public class AssetEventService {
         String model(UUID id) {
             return id == null ? null : models.computeIfAbsent(id, catalogue::modelName);
         }
-    }
-
-    private static AssetEventException estateNotFound() {
-        return new AssetEventException(HttpStatus.NOT_FOUND, "Estate not found.");
     }
 
     private static AssetEventException assetNotFound() {

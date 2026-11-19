@@ -16,9 +16,7 @@ export function EstateDetailsPage({ estateId }: { estateId: string }) {
   const permission = access.data?.estates.find(
     (assignment) => assignment.estateId === estateId
   );
-  const canEditDetails = Boolean(
-    estate.data?.owned || permission?.canManageEstate
-  );
+  const canEditDetails = Boolean(permission?.canManageEstate);
   return (
     <PageLayout>
       {estate.isPending ? (
@@ -71,7 +69,7 @@ export function EstateDetailsPage({ estateId }: { estateId: string }) {
             </p>
           )}
           <EstateDashboard
-            access={dashboardAccess(permission, estate.data.owned)}
+            access={dashboardAccess(permission)}
             estateId={estateId}
           />
         </>

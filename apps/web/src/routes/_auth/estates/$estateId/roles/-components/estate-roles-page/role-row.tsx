@@ -85,7 +85,7 @@ export function RoleRow({
               <Pencil aria-hidden="true" /> Edit
             </Link>
           ) : null}
-          {estate.role === "MANAGER" ? (
+          {estate.canManageInvitationPermissions ? (
             <Button
               aria-label={`Delete ${role.name}`}
               disabled={!(estate.canDeleteRoles && role.canDelete)}
@@ -132,7 +132,8 @@ export function RoleItem({
     (code) => catalogue.find((entry) => entry.code === code)?.label ?? code
   );
   const canEdit = estate.canEditRoles && role.canEdit;
-  const showDelete = estate.role === "MANAGER";
+  // Deleting roles is member administration: Manager-only, outside the catalogue.
+  const showDelete = estate.canManageInvitationPermissions;
   const deleteDisabled = !(estate.canDeleteRoles && role.canDelete);
   const note = roleNote(role, estate);
   const count = `${labels.length} ${labels.length === 1 ? "permission" : "permissions"}`;

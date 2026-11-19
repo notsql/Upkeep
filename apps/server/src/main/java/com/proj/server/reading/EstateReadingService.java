@@ -2,6 +2,7 @@ package com.proj.server.reading;
 
 import com.proj.server.asset.AssetRepository;
 import com.proj.server.device.DeviceMetric;
+import com.proj.server.estate.EstatePermissionCode;
 import com.proj.server.estate.EstatePermissions;
 import java.time.OffsetDateTime;
 import java.util.Set;
@@ -23,10 +24,7 @@ public class EstateReadingService {
     }
 
     void authorize(UUID estate, String user) {
-        var authority = EstatePermissions.authority(db, estate, user, false);
-        if (!authority.manager() && !"CREW".equals(authority.role())) {
-            throw new ReadingException(HttpStatus.FORBIDDEN, "Readings access to this estate is required.");
-        }
+        EstatePermissions.require(db, estate, user, EstatePermissionCode.VIEW_READINGS, false);
     }
 
     private static void validatePage(int page, int size) {

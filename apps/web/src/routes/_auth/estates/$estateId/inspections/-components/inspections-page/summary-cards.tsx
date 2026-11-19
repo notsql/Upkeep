@@ -10,9 +10,12 @@ import { SummaryCard } from "@/components/page/summary-card";
 import type { InspectionList } from "@/lib/inspection-list";
 
 export function SummaryCards({
+  canManage,
   data,
   estateId,
 }: {
+  /** Can open Check schedules (MANAGE_INSPECTIONS). */
+  canManage: boolean;
   data: InspectionList;
   estateId: string;
 }) {
@@ -52,17 +55,19 @@ export function SummaryCards({
           <p className="text-muted-foreground text-sm">
             Flagged assets with no service interval
           </p>
-          <Link
-            className={buttonVariants({
-              className: "justify-self-start",
-              size: "sm",
-              variant: "outline",
-            })}
-            params={{ estateId }}
-            to="/estates/$estateId/inspections/schedules"
-          >
-            Set check schedules
-          </Link>
+          {canManage ? (
+            <Link
+              className={buttonVariants({
+                className: "justify-self-start",
+                size: "sm",
+                variant: "outline",
+              })}
+              params={{ estateId }}
+              to="/estates/$estateId/inspections/schedules"
+            >
+              Set check schedules
+            </Link>
+          ) : null}
         </SummaryCard>
       ) : null}
     </div>

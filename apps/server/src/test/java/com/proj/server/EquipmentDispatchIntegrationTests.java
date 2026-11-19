@@ -139,10 +139,15 @@ class EquipmentDispatchIntegrationTests {
                 .andExpect(jsonPath("$[0].userId").value("crew"));
     }
 
-    @ParameterizedTest
-    @ValueSource(strings = {"crew", "council"})
-    void onlySendersCanListInspectors(String user) throws Exception {
-        as(user, "/estates/" + estateId + "/inspectors").andExpect(status().is4xxClientError());
+    // Inspectors follow VIEW_INSPECTIONS: Crew hold it, Council do not (estate-role-permissions).
+    @Test
+    void crewCanListInspectors() throws Exception {
+        as("crew", "/estates/" + estateId + "/inspectors").andExpect(status().isOk());
+    }
+
+    @Test
+    void councilCannotListInspectors() throws Exception {
+        as("council", "/estates/" + estateId + "/inspectors").andExpect(status().isForbidden());
     }
 
     // --- Send crew to inspect

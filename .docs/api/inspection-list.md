@@ -10,9 +10,10 @@ overdue. Package `com.proj.server.inspectionlist`.
 
 ## Access
 
-Both endpoints require a bearer JWT subject (401 otherwise) and use `EstateRepository.findManaged`:
-the estate owner or a same-estate `MANAGER`. A same-estate `RESIDENT` gets 403; CREW, COUNCIL,
-MEMBER, strangers and unknown estates get 404. Both paths are explicitly allowed in
+Both endpoints require a bearer JWT subject (401 otherwise) and a permission code in the estate
+(estate-role-permissions): reading the list needs `VIEW_INSPECTIONS` (owner, every Manager, Crew);
+generating it needs `MANAGE_INSPECTIONS` (owner, every Manager). Custom roles hold what they are
+granted. Members without the code get 403; strangers and unknown estates get 404. Both paths are explicitly allowed in
 `SecurityConfig`. "This month" is the current Singapore calendar month.
 
 ## GET `/estates/{estateId}/inspection-list`

@@ -1,6 +1,7 @@
 package com.proj.server.inspection;
 
 import com.proj.server.db.tables.records.AssetinspectionresultRecord;
+import com.proj.server.estate.EstatePermissionCode;
 import com.proj.server.inspectionlist.InspectionListRepository;
 import com.proj.server.resident.ImageUploads;
 import com.proj.server.storage.SignedDownloadResponse;
@@ -43,11 +44,12 @@ public class InspectionService {
         if (estate == null) throw error(HttpStatus.NOT_FOUND, "Estate not found.");
         String role = repository.role(estateId, user);
         boolean owner = user.equals(estate.getOwneruserid());
-        if ("RESIDENT".equals(role) || !(owner || "MANAGER".equals(role) || "CREW".equals(role)))
+        var needed = write ? EstatePermissionCode.RECORD_INSPECTIONS : EstatePermissionCode.VIEW_INSPECTIONS;
+        if (!repository.codes(estateId, user).contains(needed))
             throw error(
                     owner || role != null ? HttpStatus.FORBIDDEN : HttpStatus.NOT_FOUND,
                     owner || role != null
-                            ? "Inspection access is unavailable for this membership."
+                            ? "This estate permission is required: " + needed.name()
                             : "Estate not found.");
         if (write && estate.getDeactivatedat() != null) throw error(HttpStatus.CONFLICT, "This estate is inactive.");
     }

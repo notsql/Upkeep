@@ -21,7 +21,8 @@ Shared `roles/-components/`:
   cancel? })`. `FormCard` "Details" (Role name, Description (optional)) and
   `FormCard` "Permissions" (description "Choose at least one. Some need a
   prerequisite chosen too.") with one `FieldSet` + label-style `FieldLegend` per area (legend = group name: Estate, Fault reports,
-  Members and roles, Locations, Documents). The area map is client-side
+  Work orders, Assets, Readings, Devices, Inspections, Members and roles,
+  Locations, Documents). The area map is client-side
   (`AREA_OF`) because `EstatePermissionResponse` carries no area. Each permission
   is a bordered Checkbox + label + server description + "Prerequisite: ...".
   The footer (`role-form-footer.tsx`) closes the Permissions card and copies

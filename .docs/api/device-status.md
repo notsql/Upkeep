@@ -26,12 +26,13 @@ never shows as Offline; it is listed after every active device.
 
 ## GET `/estates/{estateId}/devices`
 
-- Auth: estate Manager - the owner or a `MANAGER` member (`EstateRepository.findManaged`). Readable on an inactive estate.
+- Auth: `VIEW_DEVICES` in the estate (owner, every Manager, Council, custom roles granted it; estate-role-permissions). Readable on an inactive estate.
 - path `estateId`: uuid (required)
 - 200: every device in the estate, retired assets included - EstateDeviceResponse[]. Order: `OFFLINE`, then `AWAITING_FIRST_READING`, then `ONLINE`, then `DEACTIVATED`; within a group the oldest `lastSeenAt` first, then `identifier`. Empty array when there are none.
 - 401: Sign in required - EstateError
 - 403: Caller is a resident of the estate - EstateError
-- 404: Estate not found, or the caller is not a Manager (council, crew, member, stranger) - EstateError
+- 403: The caller belongs to the estate but lacks `VIEW_DEVICES` (Crew, Resident) - EstateError
+- 404: Estate not found, or the caller does not belong to it - EstateError
 
 ## EstateDeviceResponse
 

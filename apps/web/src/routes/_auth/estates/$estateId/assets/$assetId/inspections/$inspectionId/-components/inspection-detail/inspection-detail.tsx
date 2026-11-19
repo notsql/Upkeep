@@ -117,6 +117,7 @@ export function InspectionDetail({
         <InspectionFollowUp
           active={!!active}
           canCreate={access.canCreateWorkOrders}
+          canViewWorkOrders={access.canViewWorkOrders}
           estateId={estateId}
           pending={asset.isPending}
           record={record}

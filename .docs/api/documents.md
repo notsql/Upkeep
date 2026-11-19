@@ -38,9 +38,10 @@ lasts ten minutes, so storage refuses any other type or a larger body.
 (five minutes). Document links make storage answer with the validated type and
 `Content-Disposition: attachment` carrying the original filename.
 
-Owners and current same-estate Managers, Council and Crew receive read/write
-document access. MEMBER/RESIDENT alone receive none. Custom roles need explicit
-`VIEW_DOCUMENTS`; `EDIT_DOCUMENTS` requires it. Neither code requires general
+Access follows the `VIEW_DOCUMENTS` and `EDIT_DOCUMENTS` permission codes
+(estate-role-permissions): the owner, every Manager and Council hold both; Crew
+and Residents hold neither and get 403. Custom roles need
+explicit `VIEW_DOCUMENTS`; `EDIT_DOCUMENTS` requires it. Neither code requires general
 estate management access. A conflicting same-estate RESIDENT membership denies
 owner authority. JWT roles do not supply document powers. Missing identity is
 401 even in local open-security mode; other-estate Managers gain no access.

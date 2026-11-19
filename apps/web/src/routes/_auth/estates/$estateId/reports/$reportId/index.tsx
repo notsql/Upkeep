@@ -196,7 +196,7 @@ function EstateReportDetailPage() {
           <div className="grid min-w-0 gap-4">
             <DetailsCard
               canChangeType={
-                routingAccess.canManage &&
+                routingAccess.canTriage &&
                 !!loaded.routing &&
                 loaded.routing.state !== "CLASSIFYING"
               }

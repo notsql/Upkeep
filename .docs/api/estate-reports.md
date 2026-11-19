@@ -138,10 +138,11 @@ defaults to existing and new reports. Resident response DTOs and chronological
 history are unchanged. Estate-only DTOs expose urgency; list responses omit audit
 metadata, and detail exposes the latest change or explicit null.
 
-Only a current same-estate MANAGER can change urgency in an active estate.
-Ownership relies on the MANAGER membership invariant. CREW and custom
-VIEW_FAULT_REPORTS readers see urgency and the latest change without edit rights.
-`canChangeFaultReportUrgency` reflects this policy; no new custom grant is added.
+Changing urgency needs `TRIAGE_FAULT_REPORTS` in an active estate
+(estate-role-permissions): the owner (whatever their membership row says), every
+Manager, Crew and custom roles granted it. Custom VIEW_FAULT_REPORTS-only readers
+see urgency and the latest change without edit rights (403).
+`canChangeFaultReportUrgency` reflects this policy.
 
 Safety requires Urgent. Removing Safety leaves urgency unchanged unless the
 request explicitly changes it. The service resolves an optional actor-name

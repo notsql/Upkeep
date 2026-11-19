@@ -187,15 +187,17 @@ it("keeps the section active on nested pages and matches Overview exactly", asyn
 it("hides owner-only items for a management-only non-owner", async () => {
   state.owned = false;
   estate({
-    role: "MEMBER",
+    role: "COUNCIL",
     canManageEstate: false,
     canManageInvitationPermissions: false,
     canViewAssets: false,
     canViewInspectionResults: false,
+    canViewDevices: false,
   });
   const nav = await setup("/estates/pine");
   await nav.findByRole("link", { name: "People & access" });
-  await waitFor(() => expect(requestedPaths()).toContain("/estates/{id}"));
+  // Navigation reads only access flags; it no longer fetches the estate for ownership.
+  expect(requestedPaths()).not.toContain("/estates/{id}");
   for (const label of [
     "Inspections",
     "Devices",
@@ -212,7 +214,7 @@ it("hides owner-only items for a management-only non-owner", async () => {
 
 it("shows delegate destinations to a non-owner who manages invitation permissions", async () => {
   state.owned = false;
-  estate({ role: "MEMBER", canManageEstate: false });
+  estate({ role: "COUNCIL", canManageEstate: false });
   const nav = await setup("/estates/pine");
   await nav.findByRole("link", { name: "Inspections" });
   nav.getByRole("link", { name: "Assets" });
@@ -244,6 +246,7 @@ it("shows only the Administration group for a roles-only estate", async () => {
         canViewEstateDetails: false,
         canInviteMembers: false,
         canViewEstateRoles: true,
+        canViewDevices: false,
       },
     ],
   };
@@ -263,9 +266,11 @@ it("shows Crew only their permitted sections", async () => {
   state.access = { ...workspaceAccess, estates: [crewEstateAccess] };
   const nav = await setup("/estates/oak/work-orders");
   await nav.findByRole("link", { name: "Work orders" });
+  // Crew hold VIEW_INSPECTIONS, so Inspections (the due list) is theirs too.
   expect(nav.getAllByRole("link").map((link) => link.textContent)).toEqual([
     "Overview",
     "Fault reports",
+    "Inspections",
     "Work orders",
     "Assets",
   ]);
@@ -394,7 +399,8 @@ it("links Estate settings to notifications for a Manager who cannot edit the est
   state.owned = false;
   estate({ canManageEstate: false });
   const nav = await setup("/estates/pine");
-  await waitFor(() => expect(requestedPaths()).toContain("/estates/{id}"));
+  // Navigation reads only access flags; it no longer fetches the estate for ownership.
+  expect(requestedPaths()).not.toContain("/estates/{id}");
   const settings = await nav.findByRole("link", { name: "Estate settings" });
   expect(settings.getAttribute("href")).toBe(
     "/estates/pine/notification-settings"

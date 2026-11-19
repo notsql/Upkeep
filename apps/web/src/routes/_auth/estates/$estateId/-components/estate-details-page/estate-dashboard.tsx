@@ -30,16 +30,15 @@ export interface DashboardAccess {
 }
 
 export function dashboardAccess(
-  permission: Permission | undefined,
-  owned: boolean | undefined
+  permission: Permission | undefined
 ): DashboardAccess {
   return {
-    costs: Boolean(permission && owned),
+    costs: Boolean(permission?.canViewCosts),
     workOrders: canOpenWorkOrders(permission),
     reports: canOpenFaultReports(permission),
-    inspections: canOpenInspections(permission, owned),
-    devices: canOpenDevices(permission, owned),
-    failureRisk: canOpenFailureRisk(permission, owned),
+    inspections: canOpenInspections(permission),
+    devices: canOpenDevices(permission),
+    failureRisk: canOpenFailureRisk(permission),
   };
 }
 

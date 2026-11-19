@@ -50,25 +50,6 @@ public class ResidentReportController {
         return reports.context(subject(principal));
     }
 
-    @GetMapping("/estates")
-    @Operation(operationId = "searchResidentEstates")
-    @ApiResponses({
-        @ApiResponse(responseCode = "200", description = "Up to 20 active estates whose name contains the query"),
-        @ApiResponse(
-                responseCode = "400",
-                description = "Query shorter than 2 characters",
-                content = @Content(schema = @Schema(implementation = EstateError.class))),
-        @ApiResponse(
-                responseCode = "401",
-                description = "Sign in required",
-                content = @Content(schema = @Schema(implementation = EstateError.class)))
-    })
-    public List<ResidentContextResponse.EstateLabel> estates(
-            @AuthenticationPrincipal Jwt principal, @RequestParam String q) {
-        subject(principal);
-        return reports.searchEstates(q);
-    }
-
     @GetMapping("/locations")
     @Operation(operationId = "residentLocations")
     @ApiResponses({

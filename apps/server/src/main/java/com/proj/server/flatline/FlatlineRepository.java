@@ -10,6 +10,8 @@ import static com.proj.server.db.tables.Flatlinepolicy.FLATLINEPOLICY;
 import static com.proj.server.db.tables.Location.LOCATION;
 
 import com.proj.server.device.DeviceMetric;
+import com.proj.server.estate.EstatePermissionCode;
+import com.proj.server.estate.EstatePermissions;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
@@ -38,7 +40,7 @@ public class FlatlineRepository {
         this.db = db;
     }
 
-    record EstateScope(boolean owner, String role, boolean active) {}
+    record EstateScope(boolean owner, String role, boolean active, Set<EstatePermissionCode> codes) {}
 
     record Series(UUID deviceId, DeviceMetric metric) {}
 
@@ -63,7 +65,8 @@ public class FlatlineRepository {
                         .from(ESTATEUSER)
                         .where(ESTATEUSER.ESTATEID.eq(estateId), ESTATEUSER.USERID.eq(user))
                         .fetchOne(ESTATEUSER.ROLE),
-                row.getDeactivatedat() == null));
+                row.getDeactivatedat() == null,
+                EstatePermissions.effective(db, estateId, user)));
     }
 
     Map<DeviceMetric, FlatlinePolicyResponse> policies(UUID estateId) {

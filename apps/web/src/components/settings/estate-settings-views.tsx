@@ -11,16 +11,14 @@ export const SETTINGS_TITLE = "Estate settings";
 /** Tabs across `/edit` and `/notification-settings`, each shown only to those who can open it. */
 export function EstateSettingsViews({
   estateId,
-  owned,
   permission,
 }: {
   estateId: string;
-  owned?: boolean;
   permission?: components["schemas"]["EstateAccessResponse"];
 }) {
   const params = { estateId };
   const items: SubNavItem[] = [
-    ...(canOpenEstateSettings(permission, owned)
+    ...(canOpenEstateSettings(permission)
       ? [{ label: "Details", params, to: "/estates/$estateId/edit" as const }]
       : []),
     ...(canOpenNotificationSettings(permission)

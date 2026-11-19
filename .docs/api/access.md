@@ -9,7 +9,7 @@ Source of truth: packages/api/openapi.json. JWTs supply identity; current Neon
 membership/ownership supplies authority. WorkOS admin claims grant no application
 platform or general estate powers. Sensor management permits owners and current
 same-estate MANAGER members without a provider-admin claim, while retaining its
-legacy admin-plus-MEMBER/COUNCIL compatibility checks; see
+platform-admin-plus-COUNCIL compatibility check; see
 [flatlined-sensors.md](flatlined-sensors.md).
 
 GET `/access/context` takes no body and returns 200 AppAccessResponse for an
@@ -30,16 +30,38 @@ AppAccessResponse fields: canEnterWorkspace/canCreateEstate/canAccessPlatformAdm
 hasResidentMembership/canSubmitReport: boolean; residentEstates: { id: UUID,
 name: string }[]; estates: EstateAccessResponse[]. canAccessPlatformAdmin is false.
 
-EstateAccessResponse fields: estateId: UUID; estateName: string; role: MANAGER/MEMBER/COUNCIL/RESIDENT/
-CREW/CUSTOM; canViewManagement/canManageEstate/canViewAssets/canViewAssetHistory/canViewReadings/canRecordReadings/canInviteMembers/
-canManageInvitationPermissions/canViewFaultReports/canRelocateFaultReports/
-canViewWorkOrders/canCreateWorkOrders/canUpdateWorkOrders/canViewDocuments/canUploadDocuments/
-canReviewFaultReportDuplicates: boolean. canReviewFaultReportDuplicates is true only for current MANAGER
-membership in an active estate ([fault-report-duplicates.md](fault-report-duplicates.md)). Owners project as MANAGER; ownership is
-separate. Managers manage estate-local invitations/roles; inactive estates cannot
-receive new invitations. MEMBER/COUNCIL retain dashboard reads. RESIDENT/CREW gain
-no management access. Asset visibility and other management mutations retain
-existing individual service guards; broader operations remain separate features.
+EstateAccessResponse fields: estateId: UUID; estateName: string; role: MANAGER/COUNCIL/RESIDENT/CREW/CUSTOM
+(MEMBER was dropped; legacy rows were converted to COUNCIL); then booleans. Since
+estate-role-permissions, every flag is derived from the permission codes the user
+holds in the estate (`EstatePermissions.effective`), and write flags are also false
+in an inactive estate:
+
+| Flag | Code (write flags also need an active estate) |
+| --- | --- |
+| canViewManagement / canManageEstate | VIEW_ESTATE / EDIT_ESTATE |
+| canViewAssets, canViewAssetHistory | VIEW_ASSETS |
+| canEditAssets | EDIT_ASSETS |
+| canViewCosts | VIEW_COSTS |
+| canViewReadings / canRecordReadings | VIEW_READINGS / RECORD_READINGS |
+| canImportReadings, canRevertReadingImports | IMPORT_READINGS |
+| canViewDevices / canManageDevices | VIEW_DEVICES / MANAGE_DEVICES |
+| canViewInspectionResults / canCreateInspectionResults | VIEW_INSPECTIONS / RECORD_INSPECTIONS |
+| canManageInspections | MANAGE_INSPECTIONS |
+| canViewFaultReports / canRelocateFaultReports | VIEW_FAULT_REPORTS / RELOCATE_FAULT_REPORTS |
+| canTriageFaultReports, canChangeFaultReportUrgency, canReviewFaultReportDuplicates | TRIAGE_FAULT_REPORTS |
+| canViewWorkOrders | VIEW_WORK_ORDERS |
+| canCreateWorkOrders, canUpdateWorkOrders | MANAGE_WORK_ORDERS |
+| canProgressAssignedWorkOrders | PROGRESS_ASSIGNED_WORK_ORDERS |
+| canCreateLocations, canCreateFloors / canEditLocations | CREATE_LOCATIONS / EDIT_LOCATIONS |
+| canViewEstateRoles | CREATE_ROLES or EDIT_ROLES |
+| canCreateRoles / canEditRoles | CREATE_ROLES / EDIT_ROLES |
+| canInviteMembers | INVITE_MEMBERS |
+| canViewEstateInvitations | Manager, or INVITE_MEMBERS |
+| canViewDocuments / canUploadDocuments | VIEW_DOCUMENTS / EDIT_DOCUMENTS |
+| canViewEstateDetails | holds any code |
+| canManageInvitationPermissions, canDeleteRoles, canReassignRoles | Manager only (member administration, outside the catalogue) |
+
+Owners project as MANAGER and hold every code; ownership itself is separate.
 
 Every authenticated subject has `canCreateEstate=true`, regardless of existing
 membership or WorkOS role claims. Creation records the authenticated subject's
@@ -92,7 +114,7 @@ Spring Security explicitly admits the following existing operations for authenti
 | GET | `/estates/{estateId}/devices` | Estate Manager (owner or `MANAGER` member) via `findManaged`; see [device-status.md](device-status.md) |
 | GET | `/estates/{estateId}/assets/{assetId}/devices` | Estate Manager (owner or `MANAGER` member) via `findManaged` |
 
-Catalogue lookups contain no estate data, so resident and unassigned accounts may read them. Estate operations reject a same-estate resident membership even when ownership conflicts, while residency elsewhere does not block legitimate ownership. MEMBER/COUNCIL membership and platform-admin authority alone do not grant access to these owner-only operations. The matchers are method-specific; unsupported methods and unknown nested actions remain denied by the final `denyAll()` rule. Missing or invalid authentication returns 401 when JWT authentication is configured.
+Catalogue lookups contain no estate data, so resident and unassigned accounts may read them. Estate operations reject a same-estate resident membership even when ownership conflicts, while residency elsewhere does not block legitimate ownership. Platform-admin authority alone does not grant access to these operations. The matchers are method-specific; unsupported methods and unknown nested actions remain denied by the final `denyAll()` rule. Missing or invalid authentication returns 401 when JWT authentication is configured.
 
 Sensor GET policies/review, PUT metric policy and POST device/metric pause routes
 are explicitly admitted for authenticated requests, then enforce the feature's
@@ -148,7 +170,7 @@ See [estate-roles.md](estate-roles.md) for the complete permission catalogue.
 current owners/Managers, Council, Crew or custom VIEW_DOCUMENTS. Inactive history
 is retained. `canUploadDocuments` additionally requires an active estate and
 preset document write access or custom EDIT_DOCUMENTS with VIEW_DOCUMENTS.
-MEMBER/RESIDENT alone grant neither; owner/Resident conflicts deny both.
+Crew and Residents hold neither; owner/Resident conflicts deny both.
 Deletion is projected per document, since only an uploader with current edit
 permission or an estate Manager can delete it. See [documents.md](documents.md).
 

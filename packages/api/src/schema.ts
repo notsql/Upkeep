@@ -2145,22 +2145,6 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
-  "/resident/estates": {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    get: operations["searchResidentEstates"];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
   "/resident/locations": {
     parameters: {
       query?: never;
@@ -2371,6 +2355,21 @@ export interface components {
         | "EDIT_ROLES"
         | "VIEW_DOCUMENTS"
         | "EDIT_DOCUMENTS"
+        | "TRIAGE_FAULT_REPORTS"
+        | "VIEW_WORK_ORDERS"
+        | "PROGRESS_ASSIGNED_WORK_ORDERS"
+        | "MANAGE_WORK_ORDERS"
+        | "VIEW_ASSETS"
+        | "EDIT_ASSETS"
+        | "VIEW_COSTS"
+        | "VIEW_READINGS"
+        | "RECORD_READINGS"
+        | "IMPORT_READINGS"
+        | "VIEW_DEVICES"
+        | "MANAGE_DEVICES"
+        | "VIEW_INSPECTIONS"
+        | "RECORD_INSPECTIONS"
+        | "MANAGE_INSPECTIONS"
       )[];
       /** Format: int32 */
       expectedVersion: number;
@@ -2394,6 +2393,21 @@ export interface components {
         | "EDIT_ROLES"
         | "VIEW_DOCUMENTS"
         | "EDIT_DOCUMENTS"
+        | "TRIAGE_FAULT_REPORTS"
+        | "VIEW_WORK_ORDERS"
+        | "PROGRESS_ASSIGNED_WORK_ORDERS"
+        | "MANAGE_WORK_ORDERS"
+        | "VIEW_ASSETS"
+        | "EDIT_ASSETS"
+        | "VIEW_COSTS"
+        | "VIEW_READINGS"
+        | "RECORD_READINGS"
+        | "IMPORT_READINGS"
+        | "VIEW_DEVICES"
+        | "MANAGE_DEVICES"
+        | "VIEW_INSPECTIONS"
+        | "RECORD_INSPECTIONS"
+        | "MANAGE_INSPECTIONS"
       )[];
       /** Format: date-time */
       createdAt: string;
@@ -2605,7 +2619,7 @@ export interface components {
       email: string;
       canInviteMembers: boolean;
       /** @enum {string} */
-      role: "MANAGER" | "COUNCIL" | "RESIDENT" | "CREW" | "MEMBER" | "CUSTOM";
+      role: "MANAGER" | "COUNCIL" | "RESIDENT" | "CREW" | "CUSTOM";
       owner: boolean;
       /** Format: uuid */
       customRoleId: string | null;
@@ -3011,6 +3025,21 @@ export interface components {
         | "EDIT_ROLES"
         | "VIEW_DOCUMENTS"
         | "EDIT_DOCUMENTS"
+        | "TRIAGE_FAULT_REPORTS"
+        | "VIEW_WORK_ORDERS"
+        | "PROGRESS_ASSIGNED_WORK_ORDERS"
+        | "MANAGE_WORK_ORDERS"
+        | "VIEW_ASSETS"
+        | "EDIT_ASSETS"
+        | "VIEW_COSTS"
+        | "VIEW_READINGS"
+        | "RECORD_READINGS"
+        | "IMPORT_READINGS"
+        | "VIEW_DEVICES"
+        | "MANAGE_DEVICES"
+        | "VIEW_INSPECTIONS"
+        | "RECORD_INSPECTIONS"
+        | "MANAGE_INSPECTIONS"
       )[];
     };
     SendToContractorRequest: {
@@ -3366,7 +3395,22 @@ export interface components {
         | "CREATE_ROLES"
         | "EDIT_ROLES"
         | "VIEW_DOCUMENTS"
-        | "EDIT_DOCUMENTS";
+        | "EDIT_DOCUMENTS"
+        | "TRIAGE_FAULT_REPORTS"
+        | "VIEW_WORK_ORDERS"
+        | "PROGRESS_ASSIGNED_WORK_ORDERS"
+        | "MANAGE_WORK_ORDERS"
+        | "VIEW_ASSETS"
+        | "EDIT_ASSETS"
+        | "VIEW_COSTS"
+        | "VIEW_READINGS"
+        | "RECORD_READINGS"
+        | "IMPORT_READINGS"
+        | "VIEW_DEVICES"
+        | "MANAGE_DEVICES"
+        | "VIEW_INSPECTIONS"
+        | "RECORD_INSPECTIONS"
+        | "MANAGE_INSPECTIONS";
       label: string;
       description: string;
       requires: (
@@ -3381,6 +3425,21 @@ export interface components {
         | "EDIT_ROLES"
         | "VIEW_DOCUMENTS"
         | "EDIT_DOCUMENTS"
+        | "TRIAGE_FAULT_REPORTS"
+        | "VIEW_WORK_ORDERS"
+        | "PROGRESS_ASSIGNED_WORK_ORDERS"
+        | "MANAGE_WORK_ORDERS"
+        | "VIEW_ASSETS"
+        | "EDIT_ASSETS"
+        | "VIEW_COSTS"
+        | "VIEW_READINGS"
+        | "RECORD_READINGS"
+        | "IMPORT_READINGS"
+        | "VIEW_DEVICES"
+        | "MANAGE_DEVICES"
+        | "VIEW_INSPECTIONS"
+        | "RECORD_INSPECTIONS"
+        | "MANAGE_INSPECTIONS"
       )[];
     };
     CreateAssetRequest: {
@@ -4882,7 +4941,7 @@ export interface components {
       owner: boolean;
       granted: boolean;
       /** @enum {string|null} */
-      membershipRole?: "MEMBER" | "COUNCIL" | "RESIDENT" | null;
+      membershipRole?: "COUNCIL" | "RESIDENT" | null;
       canManageGrant: boolean;
     };
     Role: {
@@ -4918,7 +4977,7 @@ export interface components {
       estateId: string;
       estateName: string;
       /** @enum {string} */
-      role: "MANAGER" | "MEMBER" | "COUNCIL" | "RESIDENT" | "CREW" | "CUSTOM";
+      role: "MANAGER" | "COUNCIL" | "RESIDENT" | "CREW" | "CUSTOM";
       canViewManagement: boolean;
       canManageEstate: boolean;
       canViewAssets: boolean;
@@ -4953,6 +5012,13 @@ export interface components {
       canRevertReadingImports?: boolean;
       canReviewFaultReportDuplicates: boolean;
       canChangeFaultReportUrgency: boolean;
+      canEditAssets: boolean;
+      canViewCosts: boolean;
+      canViewDevices: boolean;
+      canManageDevices: boolean;
+      canManageInspections: boolean;
+      canProgressAssignedWorkOrders: boolean;
+      canTriageFaultReports: boolean;
     };
   };
 }
@@ -14998,46 +15064,6 @@ export interface operations {
       };
       /** @description Inactive estate, asset, location or ancestor; stale source placement */
       409: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-    };
-  };
-  searchResidentEstates: {
-    parameters: {
-      query: {
-        q: string;
-      };
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Up to 20 active estates whose name contains the query */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateLabel"][];
-        };
-      };
-      /** @description Query shorter than 2 characters */
-      400: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          "*/*": components["schemas"]["EstateError"];
-        };
-      };
-      /** @description Sign in required */
-      401: {
         headers: {
           [name: string]: unknown;
         };

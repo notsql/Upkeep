@@ -54,6 +54,28 @@ or required permission catalogue unavailable. JSON errors are EstateError
 | EDIT_ROLES | None | Bounded custom-role editing, excluding own assigned role |
 | VIEW_DOCUMENTS | None | List, search and download invoices and service reports, including inactive history |
 | EDIT_DOCUMENTS | VIEW_DOCUMENTS | Upload in active estates; delete own files; Managers retain deletion of any estate document |
+| TRIAGE_FAULT_REPORTS | VIEW_FAULT_REPORTS | Urgency/Safety, type, duplicates and dismissal * |
+| VIEW_WORK_ORDERS | None | Work orders, their history/documents, contractor list and email status * |
+| PROGRESS_ASSIGNED_WORK_ORDERS | VIEW_WORK_ORDERS | Start/complete work orders assigned to the caller * |
+| MANAGE_WORK_ORDERS | VIEW_WORK_ORDERS | Create/edit/assign/progress any order, send reports to contractors, contractor list edits * |
+| VIEW_ASSETS | VIEW_ESTATE | Asset register/detail, history, maintenance records, failure risk, service intervals * |
+| EDIT_ASSETS | VIEW_ASSETS | Add/edit/retire/restore/correct assets, record maintenance * |
+| VIEW_COSTS | VIEW_ASSETS | Costliest assets and budget forecast * |
+| VIEW_READINGS | None | Estate and per-asset readings, export, anomaly assessments * |
+| RECORD_READINGS | VIEW_READINGS | Manual readings, anomaly assessments and checks * |
+| IMPORT_READINGS | VIEW_READINGS | CSV imports and reverts * |
+| VIEW_DEVICES | None | Device lists and stopped-sensor monitoring * |
+| MANAGE_DEVICES | VIEW_DEVICES | Device registration/replacement/removal, keys, stopped-sensor policies and pauses * |
+| VIEW_INSPECTIONS | None | Inspection results, due list and inspectors * |
+| RECORD_INSPECTIONS | VIEW_INSPECTIONS | Record inspections and photos * |
+| MANAGE_INSPECTIONS | VIEW_INSPECTIONS | Check schedules, due-list generation, sending crew to inspect * |
+
+\* Added by `estate-role-permissions` (migration
+`20261117145338_preset_role_permissions`). The catalogue lists them and custom
+roles can be granted them; every estate endpoint enforces them (see each
+area's API doc and `.docs/api/access.md` for the flag each code drives). Built-in roles resolve to the seeded `PresetRolePermission`
+bundles through `EstatePermissions.effective` (owner: every code; Resident and
+non-members: none).
 
 Prerequisites are explicit: the server rejects a missing prerequisite and never
 adds one silently. Unknown codes or inconsistent stored sets fail closed. Reserved

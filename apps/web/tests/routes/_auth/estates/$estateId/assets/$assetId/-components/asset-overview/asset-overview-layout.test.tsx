@@ -26,7 +26,7 @@ const viewer = vi.hoisted(() => ({
 vi.mock("@/lib/estates", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/estates")>()),
   useEstate: () => ({
-    data: { id: "estate", name: "Maple Grove", owned: true },
+    data: { id: "estate", name: "Maple Grove" },
   }),
 }));
 vi.mock("@/lib/access", async (importOriginal) => ({
@@ -36,7 +36,11 @@ vi.mock("@/lib/access", async (importOriginal) => ({
       estates: [
         {
           estateId: "estate",
-          role: "MEMBER",
+          // An owner's or Manager's flags (estate-role-permissions).
+          role: "MANAGER",
+          canViewAssets: true,
+          canViewDevices: true,
+          canViewInspectionResults: true,
           canViewReadings: viewer.canViewReadings,
           canRecordReadings: true,
           canCreateInspectionResults: viewer.canCreateInspectionResults,

@@ -11,4 +11,10 @@ public class EstateCostExceptionHandler {
     ResponseEntity<EstateError> cost(EstateCostException error) {
         return ResponseEntity.status(error.status()).body(new EstateError(error.getMessage()));
     }
+
+    /** Permission refusals from EstatePermissions.require keep the EstateError body (estate-role-permissions). */
+    @ExceptionHandler(org.springframework.web.server.ResponseStatusException.class)
+    ResponseEntity<EstateError> responseStatus(org.springframework.web.server.ResponseStatusException error) {
+        return ResponseEntity.status(error.getStatusCode()).body(new EstateError(error.getReason()));
+    }
 }

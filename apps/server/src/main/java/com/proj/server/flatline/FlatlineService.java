@@ -1,6 +1,7 @@
 package com.proj.server.flatline;
 
 import com.proj.server.device.DeviceMetric;
+import com.proj.server.estate.EstatePermissionCode;
 import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.Duration;
@@ -203,7 +204,7 @@ public class FlatlineService {
         if (!scope.owner() && scope.role() == null) {
             throw error(HttpStatus.NOT_FOUND, "Estate not found.");
         }
-        boolean canRead = canManage(scope, admin) || "COUNCIL".equals(scope.role());
+        boolean canRead = canManage(scope, admin) || scope.codes().contains(EstatePermissionCode.VIEW_DEVICES);
         if (!canRead || (write && !canManage(scope, admin))) {
             throw error(HttpStatus.FORBIDDEN, "Your estate role does not permit this device monitoring operation.");
         }
@@ -227,9 +228,8 @@ public class FlatlineService {
     }
 
     private static boolean canManage(FlatlineRepository.EstateScope scope, boolean admin) {
-        return scope.owner()
-                || "MANAGER".equals(scope.role())
-                || (admin && ("MEMBER".equals(scope.role()) || "COUNCIL".equals(scope.role())));
+        // The platform-admin override for Council rows is kept (estate-role-permissions).
+        return scope.codes().contains(EstatePermissionCode.MANAGE_DEVICES) || (admin && "COUNCIL".equals(scope.role()));
     }
 
     private static FlatlinePolicyResponse unconfigured(DeviceMetric metric) {

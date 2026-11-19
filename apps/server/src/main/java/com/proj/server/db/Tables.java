@@ -43,6 +43,7 @@ import com.proj.server.db.tables.Notification;
 import com.proj.server.db.tables.Notificationread;
 import com.proj.server.db.tables.Notificationsweep;
 import com.proj.server.db.tables.Permission;
+import com.proj.server.db.tables.Presetrolepermission;
 import com.proj.server.db.tables.Readingimportbatch;
 import com.proj.server.db.tables.Readingimportrow;
 import com.proj.server.db.tables.Reportclassification;
@@ -255,6 +256,11 @@ public class Tables {
      * The table <code>public.Permission</code>.
      */
     public static final Permission PERMISSION = Permission.PERMISSION;
+
+    /**
+     * The table <code>public.PresetRolePermission</code>.
+     */
+    public static final Presetrolepermission PRESETROLEPERMISSION = Presetrolepermission.PRESETROLEPERMISSION;
 
     /**
      * The table <code>public.ReadingImportBatch</code>.

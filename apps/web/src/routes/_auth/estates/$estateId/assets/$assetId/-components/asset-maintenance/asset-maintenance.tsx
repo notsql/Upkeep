@@ -1,4 +1,5 @@
 import { Separator } from "@proj/ui/components/separator";
+import { useAppAccess } from "@/lib/access";
 import { useAsset } from "@/lib/assets";
 import { useEstate } from "@/lib/estates";
 import { AssetMaintenanceSection } from "@/routes/_auth/estates/$estateId/assets/$assetId/-components/asset-maintenance/asset-maintenance-section/asset-maintenance-section";
@@ -26,6 +27,10 @@ export function AssetMaintenance({
 }) {
   const estate = useEstate(estateId);
   const asset = useAsset(estateId, assetId);
+  const access = useAppAccess();
+  const permission = access.data?.estates.find(
+    (item) => item.estateId === estateId
+  );
   if (!asset.data) {
     return null;
   }
@@ -33,17 +38,19 @@ export function AssetMaintenance({
     <>
       <AssetMaintenanceSection
         assetId={assetId}
-        canRecord={!asset.data.deactivatedAt}
+        canRecord={
+          Boolean(permission?.canEditAssets) && !asset.data.deactivatedAt
+        }
         estateId={estateId}
       />
-      {estate.data?.owned || estate.data?.canManageInvitationPermissions ? (
+      {permission?.canManageInspections ? (
         <>
           <Separator />
           <AssetServiceIntervalCard
             assetId={assetId}
             estateId={estateId}
             locked={intervalLock(
-              Boolean(estate.data.deactivatedAt),
+              Boolean(estate.data?.deactivatedAt),
               Boolean(asset.data.deactivatedAt)
             )}
           />

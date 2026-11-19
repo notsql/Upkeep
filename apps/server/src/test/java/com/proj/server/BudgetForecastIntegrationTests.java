@@ -338,11 +338,19 @@ class BudgetForecastIntegrationTests {
 
     // ---- access ------------------------------------------------------------------------------------------------
 
+    // Cost views follow VIEW_COSTS: every Manager and Council hold it (estate-role-permissions).
     @ParameterizedTest
-    @ValueSource(strings = {"MANAGER", "COUNCIL", "MEMBER", "CREW"})
-    void onlyTheOwnerCanSeeIt(String role) throws Exception {
+    @ValueSource(strings = {"MANAGER", "COUNCIL"})
+    void managersAndCouncilCanSeeIt(String role) throws Exception {
         membership("someone", role);
-        forecast("someone").andExpect(status().isNotFound());
+        forecast("someone").andExpect(status().isOk());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"CREW"})
+    void membersWithoutViewCostsAreRefused(String role) throws Exception {
+        membership("someone", role);
+        forecast("someone").andExpect(status().isForbidden());
     }
 
     @Test

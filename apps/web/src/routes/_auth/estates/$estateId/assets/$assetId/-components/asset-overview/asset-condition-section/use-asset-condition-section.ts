@@ -6,8 +6,12 @@ import {
   useRecordAssessment,
 } from "@/lib/assessments";
 
-export function useAssetConditionSection(estateId: string, assetId: string) {
-  const assessments = useAssessments(estateId, assetId);
+export function useAssetConditionSection(
+  estateId: string,
+  assetId: string,
+  canView: boolean
+) {
+  const assessments = useAssessments(estateId, assetId, canView);
   const recordAssessment = useRecordAssessment(estateId, assetId);
   const [recording, setRecording] = useState(false);
   const changeOpen = useCallback(

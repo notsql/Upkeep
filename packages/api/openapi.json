@@ -7773,49 +7773,6 @@
         }
       }
     },
-    "/resident/estates": {
-      "get": {
-        "tags": ["resident-report-controller"],
-        "operationId": "searchResidentEstates",
-        "parameters": [
-          {
-            "name": "q",
-            "in": "query",
-            "required": true,
-            "schema": { "type": "string" }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Up to 20 active estates whose name contains the query",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "type": "array",
-                  "items": { "$ref": "#/components/schemas/EstateLabel" }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Query shorter than 2 characters",
-            "content": {
-              "*/*": {
-                "schema": { "$ref": "#/components/schemas/EstateError" }
-              }
-            }
-          },
-          "401": {
-            "description": "Sign in required",
-            "content": {
-              "*/*": {
-                "schema": { "$ref": "#/components/schemas/EstateError" }
-              }
-            }
-          }
-        }
-      }
-    },
     "/resident/context": {
       "get": {
         "tags": ["resident-report-controller"],
@@ -12652,7 +12609,22 @@
                 "CREATE_ROLES",
                 "EDIT_ROLES",
                 "VIEW_DOCUMENTS",
-                "EDIT_DOCUMENTS"
+                "EDIT_DOCUMENTS",
+                "TRIAGE_FAULT_REPORTS",
+                "VIEW_WORK_ORDERS",
+                "PROGRESS_ASSIGNED_WORK_ORDERS",
+                "MANAGE_WORK_ORDERS",
+                "VIEW_ASSETS",
+                "EDIT_ASSETS",
+                "VIEW_COSTS",
+                "VIEW_READINGS",
+                "RECORD_READINGS",
+                "IMPORT_READINGS",
+                "VIEW_DEVICES",
+                "MANAGE_DEVICES",
+                "VIEW_INSPECTIONS",
+                "RECORD_INSPECTIONS",
+                "MANAGE_INSPECTIONS"
               ]
             },
             "minItems": 1
@@ -12687,7 +12659,22 @@
                 "CREATE_ROLES",
                 "EDIT_ROLES",
                 "VIEW_DOCUMENTS",
-                "EDIT_DOCUMENTS"
+                "EDIT_DOCUMENTS",
+                "TRIAGE_FAULT_REPORTS",
+                "VIEW_WORK_ORDERS",
+                "PROGRESS_ASSIGNED_WORK_ORDERS",
+                "MANAGE_WORK_ORDERS",
+                "VIEW_ASSETS",
+                "EDIT_ASSETS",
+                "VIEW_COSTS",
+                "VIEW_READINGS",
+                "RECORD_READINGS",
+                "IMPORT_READINGS",
+                "VIEW_DEVICES",
+                "MANAGE_DEVICES",
+                "VIEW_INSPECTIONS",
+                "RECORD_INSPECTIONS",
+                "MANAGE_INSPECTIONS"
               ]
             }
           },
@@ -13073,14 +13060,7 @@
           "canInviteMembers": { "type": "boolean" },
           "role": {
             "type": "string",
-            "enum": [
-              "MANAGER",
-              "COUNCIL",
-              "RESIDENT",
-              "CREW",
-              "MEMBER",
-              "CUSTOM"
-            ]
+            "enum": ["MANAGER", "COUNCIL", "RESIDENT", "CREW", "CUSTOM"]
           },
           "owner": { "type": "boolean" },
           "customRoleId": { "type": ["string", "null"], "format": "uuid" },
@@ -13826,7 +13806,22 @@
                 "CREATE_ROLES",
                 "EDIT_ROLES",
                 "VIEW_DOCUMENTS",
-                "EDIT_DOCUMENTS"
+                "EDIT_DOCUMENTS",
+                "TRIAGE_FAULT_REPORTS",
+                "VIEW_WORK_ORDERS",
+                "PROGRESS_ASSIGNED_WORK_ORDERS",
+                "MANAGE_WORK_ORDERS",
+                "VIEW_ASSETS",
+                "EDIT_ASSETS",
+                "VIEW_COSTS",
+                "VIEW_READINGS",
+                "RECORD_READINGS",
+                "IMPORT_READINGS",
+                "VIEW_DEVICES",
+                "MANAGE_DEVICES",
+                "VIEW_INSPECTIONS",
+                "RECORD_INSPECTIONS",
+                "MANAGE_INSPECTIONS"
               ]
             },
             "minItems": 1
@@ -14420,7 +14415,22 @@
               "CREATE_ROLES",
               "EDIT_ROLES",
               "VIEW_DOCUMENTS",
-              "EDIT_DOCUMENTS"
+              "EDIT_DOCUMENTS",
+              "TRIAGE_FAULT_REPORTS",
+              "VIEW_WORK_ORDERS",
+              "PROGRESS_ASSIGNED_WORK_ORDERS",
+              "MANAGE_WORK_ORDERS",
+              "VIEW_ASSETS",
+              "EDIT_ASSETS",
+              "VIEW_COSTS",
+              "VIEW_READINGS",
+              "RECORD_READINGS",
+              "IMPORT_READINGS",
+              "VIEW_DEVICES",
+              "MANAGE_DEVICES",
+              "VIEW_INSPECTIONS",
+              "RECORD_INSPECTIONS",
+              "MANAGE_INSPECTIONS"
             ]
           },
           "label": { "type": "string" },
@@ -14440,7 +14450,22 @@
                 "CREATE_ROLES",
                 "EDIT_ROLES",
                 "VIEW_DOCUMENTS",
-                "EDIT_DOCUMENTS"
+                "EDIT_DOCUMENTS",
+                "TRIAGE_FAULT_REPORTS",
+                "VIEW_WORK_ORDERS",
+                "PROGRESS_ASSIGNED_WORK_ORDERS",
+                "MANAGE_WORK_ORDERS",
+                "VIEW_ASSETS",
+                "EDIT_ASSETS",
+                "VIEW_COSTS",
+                "VIEW_READINGS",
+                "RECORD_READINGS",
+                "IMPORT_READINGS",
+                "VIEW_DEVICES",
+                "MANAGE_DEVICES",
+                "VIEW_INSPECTIONS",
+                "RECORD_INSPECTIONS",
+                "MANAGE_INSPECTIONS"
               ]
             }
           }
@@ -16984,7 +17009,7 @@
           "granted": { "type": "boolean" },
           "membershipRole": {
             "type": ["string", "null"],
-            "enum": ["MEMBER", "COUNCIL", "RESIDENT"]
+            "enum": ["COUNCIL", "RESIDENT"]
           },
           "canManageGrant": { "type": "boolean" }
         },
@@ -17060,14 +17085,7 @@
           "estateName": { "type": "string" },
           "role": {
             "type": "string",
-            "enum": [
-              "MANAGER",
-              "MEMBER",
-              "COUNCIL",
-              "RESIDENT",
-              "CREW",
-              "CUSTOM"
-            ]
+            "enum": ["MANAGER", "COUNCIL", "RESIDENT", "CREW", "CUSTOM"]
           },
           "canViewManagement": { "type": "boolean" },
           "canManageEstate": { "type": "boolean" },
@@ -17101,7 +17119,14 @@
           "canImportReadings": { "type": "boolean" },
           "canRevertReadingImports": { "type": "boolean" },
           "canReviewFaultReportDuplicates": { "type": "boolean" },
-          "canChangeFaultReportUrgency": { "type": "boolean" }
+          "canChangeFaultReportUrgency": { "type": "boolean" },
+          "canEditAssets": { "type": "boolean" },
+          "canViewCosts": { "type": "boolean" },
+          "canViewDevices": { "type": "boolean" },
+          "canManageDevices": { "type": "boolean" },
+          "canManageInspections": { "type": "boolean" },
+          "canProgressAssignedWorkOrders": { "type": "boolean" },
+          "canTriageFaultReports": { "type": "boolean" }
         },
         "required": [
           "canChangeFaultReportUrgency",
@@ -17111,19 +17136,26 @@
           "canCreateRoles",
           "canCreateWorkOrders",
           "canDeleteRoles",
+          "canEditAssets",
           "canEditLocations",
           "canEditRoles",
           "canInviteMembers",
+          "canManageDevices",
           "canManageEstate",
+          "canManageInspections",
           "canManageInvitationPermissions",
+          "canProgressAssignedWorkOrders",
           "canReassignRoles",
           "canRecordReadings",
           "canRelocateFaultReports",
           "canReviewFaultReportDuplicates",
+          "canTriageFaultReports",
           "canUpdateWorkOrders",
           "canUploadDocuments",
           "canViewAssetHistory",
           "canViewAssets",
+          "canViewCosts",
+          "canViewDevices",
           "canViewDocuments",
           "canViewEstateDetails",
           "canViewEstateInvitations",

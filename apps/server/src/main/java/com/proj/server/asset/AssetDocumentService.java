@@ -8,6 +8,7 @@ import com.proj.server.document.DocumentPageResponse;
 import com.proj.server.document.DocumentRepository;
 import com.proj.server.document.DocumentResponse;
 import com.proj.server.document.DocumentType;
+import com.proj.server.estate.EstatePermissionCode;
 import com.proj.server.estate.EstatePermissions;
 import com.proj.server.estate.EstateRepository;
 import java.nio.charset.StandardCharsets;
@@ -35,9 +36,10 @@ public class AssetDocumentService {
 
     private EstatePermissions.Authority authorize(UUID estate, String user, boolean write) {
         // Resolve live membership under the same estate lock as document deletion
-        // and work-order association writes, then reuse ordinary asset ownership.
+        // and work-order association writes. Writing a link edits the asset (EDIT_ASSETS);
+        // reading one needs VIEW_ASSETS (estate-role-permissions).
         var access = links.authority(estate, user, write);
-        if (estates.findOwned(estate, user, false).isEmpty())
+        if (!access.has(write ? EstatePermissionCode.EDIT_ASSETS : EstatePermissionCode.VIEW_ASSETS))
             throw error(HttpStatus.FORBIDDEN, "Asset-editing authority is required.");
         if (write) access.requireActive();
         else access.require(VIEW_DOCUMENTS);

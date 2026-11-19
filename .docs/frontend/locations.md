@@ -77,9 +77,12 @@ loading or unavailable. Council/Member/Crew/Resident/unassigned users and
 Managers assigned only elsewhere get no creation controls. Creation dialogs
 close when the cached access projection revokes permission; the API rechecks on
 submission. Former owners retain creation through their MANAGER membership after
-transfer. Location edit/deactivate, bulk-floor creation and estate deactivation remain owner-only. Manager level creation opens the single-level form directly, with its parent block and next position prefilled; common-area leaf rows have no empty Actions menu for Managers.
+transfer. Since estate-role-permissions every control follows a flag: create and
+bulk floors `canCreateLocations`/`canCreateFloors`, edit and deactivate
+`canEditLocations`; every Manager holds all three, like the owner. Estate
+deactivation stays owner-only.
 
-The owner-only asset register opts into `useLocations(estateId, true)` for inactive locations. It sends `includeInactive=true` and appends `"all"` to the query key. The server allows this option for owners and current MANAGER/CREW responders. Ordinary pickers and the member-readable estate hierarchy retain active-only defaults.
+The asset register (`canViewAssets`) opts into `useLocations(estateId, true)` for inactive locations. It sends `includeInactive=true` and appends `"all"` to the query key. The server allows this option for owners and current MANAGER/CREW responders. Ordinary pickers and the member-readable estate hierarchy retain active-only defaults.
 
 ## Dashboard presentation
 
@@ -131,9 +134,8 @@ LocationsSection resolves the exact estate's canCreateLocations, canCreateFloors
 and canEditLocations independently from canManageEstate. CREATE_LOCATIONS
 shows Create (add block), Add common area and Add levels (including bulk floors).
 EDIT_LOCATIONS shows rename/move controls without creation. EDIT_ESTATE alone
-shows neither. Deactivation remains current-owner-only. All mutation controls
+shows neither. EDIT_LOCATIONS also allows deactivation. All mutation controls
 require a loaded active estate; an open panel disappears when its capability is
 revoked. LocationTree receives the separate capabilities recursively. Existing
-preset Manager creation and owner-only bulk/edit/deactivation behavior is
-preserved. Query keys and invalidations are unchanged. Custom report readers
+Managers follow the same flags (they hold every location code). Query keys and invalidations are unchanged. Custom report readers
 also use historical locations for filters/correction without gaining writes.

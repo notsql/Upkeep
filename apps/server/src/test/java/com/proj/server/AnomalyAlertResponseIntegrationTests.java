@@ -211,7 +211,7 @@ class AnomalyAlertResponseIntegrationTests {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"MEMBER", "COUNCIL", "CREW"})
+    @ValueSource(strings = {"COUNCIL", "CREW"})
     void onlyManagersCanAct(String role) throws Exception {
         membership("someone", role);
         acknowledge("someone", alertId, "{}").andExpect(status().isNotFound());

@@ -59,7 +59,11 @@ beforeEach(() => {
   vi.mocked(api.GET).mockImplementation((path) => {
     let data: unknown = locations;
     if (path === "/estates/{id}") {
-      data = { name: "Maple Grove", owned: true };
+      data = { name: "Maple Grove" };
+    }
+    // Registering devices needs MANAGE_DEVICES (estate-role-permissions).
+    if (path === "/access/context") {
+      data = { estates: [{ estateId: "estate-id", canManageDevices: true }] };
     }
     if (path === "/estates/{estateId}/assets/{id}") {
       data = { name: "Water pump", reference: "E-A0001", locationId: "plant" };
@@ -115,20 +119,25 @@ it("registers a device and returns to the asset", async () => {
 it.each(["shared", "inactive estate", "retired asset"])(
   "prevents direct device registration for %s",
   async (state) => {
+    const replies: Record<string, unknown> = {
+      // Registering devices needs MANAGE_DEVICES (estate-role-permissions).
+      "/access/context": {
+        estates: [
+          { estateId: "estate-id", canManageDevices: state !== "shared" },
+        ],
+      },
+      "/estates/{id}": {
+        deactivatedAt: state === "inactive estate" ? at : undefined,
+      },
+    };
     vi.mocked(api.GET).mockImplementation(
       async (path) =>
         ({
-          data:
-            path === "/estates/{id}"
-              ? {
-                  owned: state !== "shared",
-                  deactivatedAt: state === "inactive estate" ? at : undefined,
-                }
-              : {
-                  name: "Water pump",
-                  locationId: "plant",
-                  deactivatedAt: state === "retired asset" ? at : undefined,
-                },
+          data: replies[path as string] ?? {
+            name: "Water pump",
+            locationId: "plant",
+            deactivatedAt: state === "retired asset" ? at : undefined,
+          },
           response: new Response(),
         }) as never
     );

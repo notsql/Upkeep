@@ -66,6 +66,11 @@ public class EstateRepository {
                 .map(row -> response(row, user));
     }
 
+    /** The estate once {@code user} holds {@code code} there; 404 for non-members, 403 when the code is missing. */
+    public EstateResponse require(UUID id, String user, EstatePermissionCode code, boolean lock) {
+        return response(EstatePermissions.require(db, id, user, code, lock), user);
+    }
+
     public Optional<EstateResponse> findOwned(UUID id, String owner, boolean lock) {
         denyResident(id, owner);
         if (isCustom(id, owner) && !db.fetchExists(ESTATE, ESTATE.ID.eq(id).and(ESTATE.OWNERUSERID.eq(owner))))
@@ -160,6 +165,11 @@ public class EstateRepository {
                                 .select(ESTATEUSER.ESTATEID)
                                 .from(ESTATEUSER)
                                 .where(ESTATEUSER.USERID.eq(user).and(ESTATEUSER.ROLE.eq("CREW"))))));
+    }
+
+    /** Every code the user holds in the estate (see {@link EstatePermissions#effective}). */
+    public java.util.Set<EstatePermissionCode> codes(UUID id, String user) {
+        return EstatePermissions.effective(db, id, user);
     }
 
     public boolean hasPermission(UUID id, String user, EstatePermissionCode permission) {

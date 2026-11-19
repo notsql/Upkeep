@@ -112,19 +112,31 @@ const failed = (): Reply => ({
   response: new Response(null, { status: 500 }),
 });
 
+// Viewers are described by their access flags (estate-role-permissions);
+// the defaults are an owner's or Manager's.
 function mockApi({
-  owned = true,
-  role = "MEMBER",
+  canViewDevices = true,
+  canEditAssets = true,
   overrides = {},
 }: {
-  owned?: boolean;
-  role?: string;
+  canViewDevices?: boolean;
+  canEditAssets?: boolean;
   overrides?: Record<string, () => Promise<Reply> | Reply>;
 } = {}) {
   const replies: Record<string, () => Promise<Reply> | Reply> = {
-    "/estates/{id}": () => ok({ id: ESTATE, name: "Maple Grove", owned }),
+    "/estates/{id}": () => ok({ id: ESTATE, name: "Maple Grove" }),
     "/access/context": () =>
-      ok({ estates: [{ estateId: ESTATE, role, canViewAssets: true }] }),
+      ok({
+        estates: [
+          {
+            estateId: ESTATE,
+            role: "MANAGER",
+            canViewAssets: true,
+            canViewDevices,
+            canEditAssets,
+          },
+        ],
+      }),
     "/estates/{estateId}/assets": () => ok(assets),
     "/estates/{estateId}/locations": () => ok(locations),
     "/estates/{estateId}/devices": () => ok(devices),
@@ -230,17 +242,24 @@ describe("assets by location", () => {
     expect(within(pumpRow).queryByText(FLAGGED)).toBeNull();
   });
 
-  it("omits the risk column, and never requests failure risk, for a non-owner", async () => {
-    mockApi({ owned: false, role: "MANAGER" });
+  // Failure risk needs only VIEW_ASSETS, which every register viewer holds.
+  it("shows the risk column to every asset viewer, not only the owner", async () => {
+    mockApi({ canViewDevices: false, canEditAssets: false });
     renderRegister();
     await screen.findByRole("link", { name: "Water pump" });
-    await screen.findByText("1 of 2 offline");
-    expect(screen.queryByRole("columnheader", { name: "Risk" })).toBeNull();
-    expect(calledPaths()).not.toContain("/estates/{estateId}/failure-risk");
+    await screen.findByRole("columnheader", { name: "Risk" });
+    expect(calledPaths()).toContain("/estates/{estateId}/failure-risk");
   });
 
-  it("omits the device column, and never requests devices, for a viewer who is neither owner nor Manager", async () => {
-    mockApi({ owned: false, role: "MEMBER" });
+  it("offers Create only to someone who can edit assets", async () => {
+    mockApi({ canEditAssets: false });
+    renderRegister();
+    await screen.findByRole("link", { name: "Water pump" });
+    expect(screen.queryByRole("link", { name: "Create" })).toBeNull();
+  });
+
+  it("omits the device column, and never requests devices, for someone who cannot view devices", async () => {
+    mockApi({ canViewDevices: false });
     renderRegister();
     await screen.findByRole("link", { name: "Water pump" });
     expect(screen.queryByRole("columnheader", { name: "Sensors" })).toBeNull();
@@ -329,7 +348,7 @@ describe("assets by location", () => {
   });
 
   it("shows no view tabs to a viewer who cannot open All devices", async () => {
-    mockApi({ owned: false, role: "MEMBER" });
+    mockApi({ canViewDevices: false });
     renderRegister();
     await screen.findByRole("link", { name: "Water pump" });
     expect(

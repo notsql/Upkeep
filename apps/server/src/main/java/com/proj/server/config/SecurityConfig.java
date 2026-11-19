@@ -66,7 +66,6 @@ public class SecurityConfig {
                         .requestMatchers(
                                 HttpMethod.GET,
                                 "/resident/context",
-                                "/resident/estates",
                                 "/resident/locations",
                                 "/resident/reports",
                                 "/resident/reports/{reportId}",

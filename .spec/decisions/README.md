@@ -51,3 +51,5 @@ Decisions are append-only. To reverse one, add a new record that supersedes it.
 - [0053 - Fault reports from any signed-in user](0053-fault-reports-from-any-signed-in-user.md)
 - [0054 - Work order assignment](0054-work-order-assignment.md)
 - [0055 - Contractors under Administration](0055-contractors-under-administration.md)
+- [0056 - Fault reports from estate members only](0056-fault-reports-from-estate-members-only.md) (supersedes 0053)
+- [0057 - Built-in roles are permission-code bundles](0057-built-in-roles-are-permission-code-bundles.md) (amends 0032)

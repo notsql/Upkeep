@@ -3,8 +3,8 @@ package com.proj.server.category;
 import com.proj.server.db.tables.records.AssetcategoryRecord;
 import com.proj.server.db.tables.records.AssetcategoryflagchangeRecord;
 import com.proj.server.db.tables.records.AssetcategoryintervalchangeRecord;
+import com.proj.server.estate.EstatePermissionCode;
 import com.proj.server.estate.EstateRepository;
-import com.proj.server.estate.EstateResponse;
 import com.proj.server.workos.WorkOSService;
 import java.util.Comparator;
 import java.util.Objects;
@@ -41,7 +41,7 @@ public class AssetCategorySettingsService {
     }
 
     public EstateAssetCategoriesResponse list(UUID estateId, String user) {
-        var estate = managed(estateId, user);
+        var estate = estates.require(estateId, user, EstatePermissionCode.VIEW_ASSETS, false);
         var changes = repository.latestChanges(estateId);
         var intervalChanges = intervals.latestCategoryChanges(estateId);
         var counts = repository.activeAssetCounts(estateId);
@@ -103,7 +103,7 @@ public class AssetCategorySettingsService {
     }
 
     private AssetcategoryRecord changeable(UUID estateId, String code, String user) {
-        var estate = managed(estateId, user);
+        var estate = estates.require(estateId, user, EstatePermissionCode.MANAGE_INSPECTIONS, true);
         if (estate.deactivatedAt() != null) {
             throw new AssetCategoryException(
                     HttpStatus.CONFLICT, "This estate is inactive. Its asset categories cannot be changed.");
@@ -111,11 +111,6 @@ public class AssetCategorySettingsService {
         return repository
                 .category(code)
                 .orElseThrow(() -> new AssetCategoryException(HttpStatus.NOT_FOUND, "Asset category not found."));
-    }
-
-    private EstateResponse managed(UUID estateId, String user) {
-        return estates.findManaged(estateId, user)
-                .orElseThrow(() -> new AssetCategoryException(HttpStatus.NOT_FOUND, "Estate not found."));
     }
 
     private static EstateAssetCategoryResponse response(

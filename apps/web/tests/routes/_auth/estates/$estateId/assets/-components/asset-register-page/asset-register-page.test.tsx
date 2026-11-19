@@ -48,9 +48,19 @@ describe("estate asset register", () => {
       async (path) =>
         ({
           data:
-            path === "/estates/{id}"
-              ? { id: "estate", name: "Maple Grove", owned: true }
-              : [],
+            {
+              "/estates/{id}": { id: "estate", name: "Maple Grove" },
+              // Create needs EDIT_ASSETS (estate-role-permissions).
+              "/access/context": {
+                estates: [
+                  {
+                    estateId: "estate",
+                    canViewAssets: true,
+                    canEditAssets: true,
+                  },
+                ],
+              },
+            }[path as string] ?? [],
           response: new Response(),
         }) as never
     );
@@ -111,9 +121,19 @@ describe("estate asset register", () => {
       async (path) =>
         ({
           data:
-            path === "/estates/{id}"
-              ? { id: "estate", name: "Maple Grove", owned: true }
-              : [],
+            {
+              "/estates/{id}": { id: "estate", name: "Maple Grove" },
+              // Create needs EDIT_ASSETS (estate-role-permissions).
+              "/access/context": {
+                estates: [
+                  {
+                    estateId: "estate",
+                    canViewAssets: true,
+                    canEditAssets: true,
+                  },
+                ],
+              },
+            }[path as string] ?? [],
           response: new Response(),
         }) as never
     );

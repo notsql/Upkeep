@@ -243,7 +243,7 @@ class ReadingCsvExportIntegrationTests {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"RESIDENT", "COUNCIL", "MEMBER"})
+    @ValueSource(strings = {"RESIDENT", "COUNCIL"})
     void deniesOtherRoles(String role) throws Exception {
         db.insertInto(ESTATEUSER)
                 .set(ESTATEUSER.ESTATEID, estate)

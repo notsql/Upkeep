@@ -5,7 +5,7 @@ Those endpoints have a separate contract: metadata requires document-read access
 and link/unlink remains available on retired assets while preserving the uploaded
 file, work-order link and equipment fields.
 
-Contract: `packages/api/openapi.json`. All asset endpoints require bearer JWT and estate ownership. Missing authentication returns 401; foreign or missing resources return 404. Writes require an active estate and lock estate before asset. No invitation-role dependency.
+Contract: `packages/api/openapi.json`. All asset endpoints require bearer JWT and a permission code in the estate (estate-role-permissions): reads (`GET` list, detail, lifecycle events) need `VIEW_ASSETS`; create, edit, retire, correct retirement and restore need `EDIT_ASSETS`. The owner, every Manager and Council hold both; custom roles hold what they are granted. Missing authentication returns 401; a member without the code gets 403 (`This estate permission is required: <CODE>`); non-members and foreign or missing resources get 404. Writes require an active estate (409 otherwise) and lock estate before asset. Devices follow `VIEW_DEVICES`/`MANAGE_DEVICES`; maintenance and failure risk follow `VIEW_ASSETS`/`EDIT_ASSETS`, and assessments follow the reading codes. No invitation-role dependency.
 
 ## GET `/estates/{estateId}/assets`
 
@@ -60,7 +60,7 @@ latest assessment. Search uses literal case-insensitive substring matching, so
 
 ## GET `/estates/{estateId}/assets/{assetId}/devices`
 
-- Auth: estate Manager - the owner or a `MANAGER` member; residents get 403. Registration and credentials stay owner-only.
+- Auth: `VIEW_DEVICES` (owner, every Manager, Council, custom roles granted it); other members get 403. Registration, credentials, deactivation and replacement need `MANAGE_DEVICES` (owner, every Manager, custom roles granted it).
 - path `estateId`: uuid (required)
 - path `assetId`: uuid (required)
 - 400: Missing or invalid details, or an unsupported metric — EstateError
@@ -82,7 +82,7 @@ latest assessment. Search uses literal case-insensitive substring matching, so
 
 ## POST `/estates/{estateId}/assets/{assetId}/devices/{deviceId}/credential`
 
-Owner only. No body. See "Device credentials" below.
+Requires `MANAGE_DEVICES`. No body. See "Device credentials" below.
 
 - path `estateId`: uuid (required)
 - path `assetId`: uuid (required)
@@ -96,7 +96,7 @@ Owner only. No body. See "Device credentials" below.
 
 ## POST `/estates/{estateId}/assets/{assetId}/devices/{deviceId}/deactivate`
 
-Owner only (ID-45). Permanent. See "Device deactivation and replacement" below.
+Requires `MANAGE_DEVICES` (ID-45). Permanent. See "Device deactivation and replacement" below.
 
 - path `estateId`, `assetId`, `deviceId`: uuid (required)
 - Body: DeactivateDeviceRequest
@@ -108,7 +108,7 @@ Owner only (ID-45). Permanent. See "Device deactivation and replacement" below.
 
 ## POST `/estates/{estateId}/assets/{assetId}/devices/{deviceId}/replace`
 
-Owner only (ID-45). Deactivates the device and registers a new one on the same asset, in one transaction.
+Requires `MANAGE_DEVICES` (ID-45). Deactivates the device and registers a new one on the same asset, in one transaction.
 
 - path `estateId`, `assetId`, `deviceId`: uuid (required)
 - Body: CreateDeviceRequest (the new device)
@@ -119,6 +119,8 @@ Owner only (ID-45). Deactivates the device and registers a new one on the same a
 - 201: The old device deactivated and the new one registered on the same asset — DeviceResponse (the new device)
 
 ## GET `/estates/{estateId}/assets/{assetId}/assessments`
+
+Requires `VIEW_READINGS`; the POST below requires `RECORD_READINGS` (owner, every Manager, Crew and custom roles granted them; 403 for other members).
 
 - path `estateId`: uuid (required)
 - path `assetId`: uuid (required)

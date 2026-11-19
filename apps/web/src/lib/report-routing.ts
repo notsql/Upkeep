@@ -110,7 +110,11 @@ export function routingStateLabel(state: RoutingState): string {
   return ROUTING_STATES.find((item) => item.value === state)?.label ?? state;
 }
 
-/** Routing decisions and contractor settings belong to work-order creators (ID-36: owner or Manager). */
+/**
+ * Sending to a contractor and contractor settings create or change work orders
+ * (MANAGE_WORK_ORDERS); dismissing and changing a report's type are triage
+ * (TRIAGE_FAULT_REPORTS), which Crew hold too (estate-role-permissions).
+ */
 export function useRoutingAccess(estateId: string) {
   const access = useAppAccess();
   const { userId, ready } = useAuthenticatedSession();
@@ -120,6 +124,7 @@ export function useRoutingAccess(estateId: string) {
   return {
     userId,
     canManage: ready && !access.isError && !!permission?.canCreateWorkOrders,
+    canTriage: ready && !access.isError && !!permission?.canTriageFaultReports,
     canViewWorkOrders:
       ready && !access.isError && !!permission?.canViewWorkOrders,
     pending: !ready || access.isPending,

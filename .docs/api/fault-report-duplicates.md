@@ -95,9 +95,9 @@ return these estate DTOs. The resident endpoints keep the original DTOs.
 
 ## Endpoints
 
-Both endpoints need current MANAGER membership in an active estate. Owners
-qualify through their MANAGER membership. CREW, CUSTOM, COUNCIL, RESIDENT and
-MEMBER get 403. Strangers, and estates or reports that are missing or
+Both endpoints need `TRIAGE_FAULT_REPORTS` in an active estate
+(estate-role-permissions): the owner, every Manager, Crew and custom roles
+granted it. Council, Residents and other custom roles get 403. Strangers, and estates or reports that are missing or
 inaccessible, get 404. The estate row is locked before membership is checked.
 Responses carry `Cache-Control: private, no-store`.
 
@@ -142,5 +142,5 @@ unaffected. Work orders that existed before a report was linked are kept.
   `CONFIRMED` duplicates of the work order's source report, or 0 without one.
   It is on every work-order list and detail response; see
   [work-orders.md](work-orders.md).
-- `EstateAccessResponse.canReviewFaultReportDuplicates: boolean`: true only for
-  current MANAGER membership in an active estate; see [access.md](access.md).
+- `EstateAccessResponse.canReviewFaultReportDuplicates: boolean`: true for
+  holders of `TRIAGE_FAULT_REPORTS` in an active estate; see [access.md](access.md).

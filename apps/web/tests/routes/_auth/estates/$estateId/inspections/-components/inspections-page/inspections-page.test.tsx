@@ -76,6 +76,7 @@ const state = vi.hoisted(() => ({
   refetch: vi.fn(),
   generate: vi.fn(),
   canCreate: true,
+  canManage: true,
 }));
 
 beforeEach(() => {
@@ -102,6 +103,7 @@ beforeEach(() => {
   state.refetch = vi.fn();
   state.generate = vi.fn(() => Promise.resolve({ added: 2 }));
   state.canCreate = true;
+  state.canManage = true;
   vi.mocked(toast.success).mockReset();
 });
 
@@ -119,7 +121,10 @@ vi.mock("@/lib/inspection-list", () => ({
   }),
 }));
 vi.mock("@/lib/inspections", () => ({
-  useInspectionAccess: () => ({ canCreate: state.canCreate }),
+  useInspectionAccess: () => ({
+    canCreate: state.canCreate,
+    canManage: state.canManage,
+  }),
 }));
 vi.mock("@tanstack/react-router", () => ({
   Link: ({
@@ -372,4 +377,27 @@ it("keeps the note alongside checks still open from before", () => {
 it("has no note while a category is flagged", () => {
   renderWithProviders(<InspectionsPage estateId="oak" />);
   expect(screen.queryByRole("note", { name: "No regular checks" })).toBeNull();
+});
+
+// Crew view the due list but not check schedules (MANAGE_INSPECTIONS), so
+// nothing on the page offers them (estate-role-permissions).
+it("offers no schedules, tabs or generating without managing inspections", () => {
+  state.canManage = false;
+  state.data = { ...(state.data as object), flaggedCategoryCount: 0 };
+  renderWithProviders(<InspectionsPage estateId="oak" />);
+  screen.getByRole("row", { name: L1 });
+  screen.getByText(
+    "No equipment has regular checks turned on yet, so nothing is due."
+  );
+  screen.getByText("Assets without a schedule");
+  expect(
+    screen.queryByRole("navigation", { name: "Inspection views" })
+  ).toBeNull();
+  expect(
+    screen.queryByRole("link", { name: "Set check schedules" })
+  ).toBeNull();
+  expect(
+    screen.queryByRole("link", { name: "Turn on regular checks" })
+  ).toBeNull();
+  expect(screen.queryByRole("button", { name: "Generate list" })).toBeNull();
 });

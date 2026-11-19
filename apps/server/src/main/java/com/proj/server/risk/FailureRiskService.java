@@ -4,6 +4,7 @@ import com.proj.server.asset.AssetCondition;
 import com.proj.server.asset.AssetRepository;
 import com.proj.server.db.tables.records.AssetRecord;
 import com.proj.server.db.tables.records.AsseteventRecord;
+import com.proj.server.estate.EstatePermissionCode;
 import com.proj.server.estate.EstateRepository;
 import com.proj.server.event.AssetEventRepository;
 import com.proj.server.event.AssetEventService;
@@ -47,7 +48,7 @@ public class FailureRiskService {
 
     /** Readable for a deactivated asset and for any category: non-pumps get basis NOT_SUPPORTED. */
     public FailureRiskResponse forAsset(UUID estateId, UUID assetId, String owner) {
-        estates.findOwned(estateId, owner, false).orElseThrow(FailureRiskService::estateNotFound);
+        estates.require(estateId, owner, EstatePermissionCode.VIEW_ASSETS, false);
         var asset = assets.find(assetId, estateId, false)
                 .orElseThrow(() -> new FailureRiskException(HttpStatus.NOT_FOUND, "Asset not found."));
         return response(asset, events.listForAsset(assetId), today());
@@ -55,7 +56,7 @@ public class FailureRiskService {
 
     /** The estate's active assets in silent-failure categories, flagged first, then by 90-day risk. */
     public List<FailureRiskResponse> forEstate(UUID estateId, String owner) {
-        estates.findOwned(estateId, owner, false).orElseThrow(FailureRiskService::estateNotFound);
+        estates.require(estateId, owner, EstatePermissionCode.VIEW_ASSETS, false);
         var byAsset =
                 events.listForEstate(estateId).stream().collect(Collectors.groupingBy(AsseteventRecord::getAssetid));
         var today = today();
@@ -101,9 +102,5 @@ public class FailureRiskService {
 
     private static LocalDate today() {
         return LocalDate.now(ZoneOffset.UTC);
-    }
-
-    private static FailureRiskException estateNotFound() {
-        return new FailureRiskException(HttpStatus.NOT_FOUND, "Estate not found.");
     }
 }

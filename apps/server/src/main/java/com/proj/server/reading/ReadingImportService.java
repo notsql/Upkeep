@@ -3,6 +3,7 @@ package com.proj.server.reading;
 import com.proj.server.db.tables.records.AssetRecord;
 import com.proj.server.db.tables.records.ImportedreadingRecord;
 import com.proj.server.device.DeviceMetric;
+import com.proj.server.estate.EstatePermissionCode;
 import com.proj.server.estate.EstatePermissions;
 import com.proj.server.workos.WorkOSService;
 import java.math.BigDecimal;
@@ -36,9 +37,10 @@ public class ReadingImportService {
     public record Submitted(ReadingImportBatchResponse batch, boolean created) {}
 
     void authorize(UUID estate, String user, boolean lock, boolean active) {
-        var authority = EstatePermissions.authority(db, estate, user, lock);
-        authority.requireManager();
-        if (active) authority.requireActive();
+        var record = EstatePermissions.require(db, estate, user, EstatePermissionCode.IMPORT_READINGS, lock);
+        if (active && record.getDeactivatedat() != null)
+            throw new org.springframework.web.server.ResponseStatusException(
+                    org.springframework.http.HttpStatus.CONFLICT, "This estate is inactive.");
     }
 
     @Transactional(timeout = 120)

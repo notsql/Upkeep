@@ -53,7 +53,7 @@ public class DashboardRepository {
                         .eq(true)
                         .and(ownedEstate.field(ESTATE.DEACTIVATEDAT).isNull())
                         .and(ESTATEUSER.USERID.ne(user))
-                        .and(ESTATEUSER.ROLE.in("MEMBER", "COUNCIL")))
+                        .and(ESTATEUSER.ROLE.eq("COUNCIL")))
                 .asField("members");
         var latestAssessment = lateral(select(ASSETASSESSMENT.CONDITION)
                         .from(ASSETASSESSMENT)

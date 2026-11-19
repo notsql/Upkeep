@@ -89,7 +89,7 @@ export function ReadingImportsPage({ estateId }: { estateId: string }) {
     (estate) => estate.estateId === estateId
   );
   const allowed = Boolean(permission?.canImportReadings);
-  const canRead = Boolean(allowed || permission?.role === "MANAGER");
+  const canRead = Boolean(allowed || permission?.canRevertReadingImports);
   const [page, setPage] = useState(0);
   const mobile = useMobile();
   const paged = useReadingImports(estateId, page, canRead && !mobile);

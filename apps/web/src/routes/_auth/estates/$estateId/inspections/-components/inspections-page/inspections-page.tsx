@@ -28,7 +28,7 @@ export function InspectionsPage({ estateId }: { estateId: string }) {
     <PageLayout>
       <ListPageHeader
         actions={
-          data ? (
+          data && access.canManage ? (
             <GenerateButton
               data={data}
               onGenerate={run}
@@ -40,17 +40,24 @@ export function InspectionsPage({ estateId }: { estateId: string }) {
         icon={ClipboardCheck}
         title="Inspections"
       />
-      <InspectionViews estateId={estateId} />
+      <InspectionViews estateId={estateId} schedules={access.canManage} />
       {list.isPending ? <LoadingState label="Loading inspections…" /> : null}
       {list.error ? (
         <ErrorState message={list.error.message} onRetry={retry} />
       ) : null}
       {data ? (
         <div className="grid gap-6">
-          <SummaryCards data={data} estateId={estateId} />
+          <SummaryCards
+            canManage={access.canManage}
+            data={data}
+            estateId={estateId}
+          />
           <InspectionsGenerationStatus data={data} error={error} />
           {data.flaggedCategoryCount === 0 ? (
-            <InspectionsNoFlaggedCategories estateId={estateId} />
+            <InspectionsNoFlaggedCategories
+              canManage={access.canManage}
+              estateId={estateId}
+            />
           ) : null}
           <InspectionsChecks
             canRecord={access.canCreate}
@@ -58,7 +65,11 @@ export function InspectionsPage({ estateId }: { estateId: string }) {
             estateId={estateId}
             generated={!!data.generatedAt}
           />
-          <Unscheduled data={data} estateId={estateId} />
+          <Unscheduled
+            canManage={access.canManage}
+            data={data}
+            estateId={estateId}
+          />
         </div>
       ) : null}
     </PageLayout>

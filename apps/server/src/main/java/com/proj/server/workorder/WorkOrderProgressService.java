@@ -1,5 +1,6 @@
 package com.proj.server.workorder;
 
+import com.proj.server.estate.EstatePermissionCode;
 import com.proj.server.estate.EstateRepository;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
@@ -31,8 +32,6 @@ public class WorkOrderProgressService {
 
     private void authorizeUpdate(UUID estate, String user) {
         orders.authorize(estate, user, true, true);
-        if (!estates.isManager(estate, user))
-            throw error(HttpStatus.FORBIDDEN, "Only the owner or an assigned Manager can update work-order progress.");
     }
 
     /**
@@ -41,7 +40,8 @@ public class WorkOrderProgressService {
      */
     private com.proj.server.db.tables.records.WorkorderRecord authorizeProgress(UUID estate, String user, UUID id) {
         var found = orders.authorize(estate, user, false, true);
-        boolean manager = estates.isManager(estate, user);
+        var codes = orders.codes(estate, user);
+        boolean manager = codes.contains(EstatePermissionCode.MANAGE_WORK_ORDERS);
         if (manager && found.getDeactivatedat() != null) throw error(HttpStatus.CONFLICT, "This estate is inactive.");
         var row = repository.lockOrder(estate, id);
         if (manager) {
@@ -52,7 +52,7 @@ public class WorkOrderProgressService {
                 && WorkOrderAssignment.canProgress(
                         WorkOrderStatus.IN_PROGRESS,
                         false,
-                        repository.role(estate, user),
+                        codes.contains(EstatePermissionCode.PROGRESS_ASSIGNED_WORK_ORDERS),
                         row.getAssigneeuserid(),
                         user);
         if (!assignee)
@@ -205,8 +205,8 @@ public class WorkOrderProgressService {
     }
 
     public List<AssetWorkOrderCompletionResponse> completions(UUID estate, UUID asset, String user) {
-        if (estates.findOwned(estate, user, false).isEmpty() || repository.asset(estate, asset) == null)
-            throw error(HttpStatus.NOT_FOUND, "Asset not found.");
+        estates.require(estate, user, EstatePermissionCode.VIEW_ASSETS, false);
+        if (repository.asset(estate, asset) == null) throw error(HttpStatus.NOT_FOUND, "Asset not found.");
         return repository.completions(estate, asset);
     }
 

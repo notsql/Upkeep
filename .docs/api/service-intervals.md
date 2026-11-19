@@ -10,10 +10,10 @@ interval is set through `AssetCategorySettingsService`).
 
 ## Access
 
-Every endpoint requires a bearer JWT subject (401 otherwise) and uses `EstateRepository.findManaged`,
-as in [asset-categories.md](asset-categories.md): the estate owner or a same-estate `MANAGER`
-member. A same-estate `RESIDENT` gets 403; CREW, COUNCIL, MEMBER, strangers and unknown estates get
-404. An asset that is not in the estate gets 404. All paths are explicitly allowed in
+Every endpoint requires a bearer JWT subject (401 otherwise) and a permission code, as in
+[asset-categories.md](asset-categories.md): reading an asset's interval needs `VIEW_ASSETS`
+(owner, every Manager, Council); setting a category or asset interval needs `MANAGE_INSPECTIONS`
+(owner, every Manager). Members without the code get 403; strangers and unknown estates get 404. An asset that is not in the estate gets 404. All paths are explicitly allowed in
 `SecurityConfig`.
 
 ## PUT `/estates/{estateId}/asset-categories/{category}/service-interval`

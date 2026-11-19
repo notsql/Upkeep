@@ -22,7 +22,7 @@ public class AccessService {
     }
 
     public static Condition managementMembership() {
-        return ESTATEUSER.ROLE.in("MEMBER", "COUNCIL", "MANAGER");
+        return ESTATEUSER.ROLE.in("COUNCIL", "MANAGER");
     }
 
     public static Condition managerEstates(String user) {
@@ -83,49 +83,37 @@ public class AccessService {
                         .and(ESTATEROLEDEFINITION.ESTATEID.eq(ESTATE.ID)))
                 .where(ESTATE.OWNERUSERID
                         .eq(user)
-                        .or(ESTATEUSER.ROLE.in("MEMBER", "COUNCIL", "RESIDENT", "MANAGER", "CREW", "CUSTOM")))
+                        .or(ESTATEUSER.ROLE.in("COUNCIL", "RESIDENT", "MANAGER", "CREW", "CUSTOM")))
                 .orderBy(ESTATE.ID)
                 .fetch();
         var capabilities = rows.map(row -> {
-            boolean custom = "CUSTOM".equals(row.get(ESTATEUSER.ROLE));
-            var permissions = custom
-                    ? EstatePermissions.grants(db, row.get(ESTATEUSER.CUSTOMROLEID), row.get(ESTATE.ID))
-                    : java.util.Set.<EstatePermissionCode>of();
+            // Every flag comes from the codes the user holds here (estate-role-permissions); member
+            // administration and ownership stay outside the catalogue.
+            var codes = EstatePermissions.effective(db, row.get(ESTATE.ID), user);
             boolean resident = "RESIDENT".equals(row.get(ESTATEUSER.ROLE));
             boolean owner = !resident && user.equals(row.get(ESTATE.OWNERUSERID));
             boolean manager = !resident && (owner || "MANAGER".equals(row.get(ESTATEUSER.ROLE)));
-            boolean management = !resident
-                    && (owner
-                            || manager
-                            || "MEMBER".equals(row.get(ESTATEUSER.ROLE))
-                            || "COUNCIL".equals(row.get(ESTATEUSER.ROLE)));
             boolean active = row.get(ESTATE.DEACTIVATEDAT) == null;
-            boolean responder = "MANAGER".equals(row.get(ESTATEUSER.ROLE)) || "CREW".equals(row.get(ESTATEUSER.ROLE));
-            boolean canViewManagement = management || permissions.contains(EstatePermissionCode.VIEW_ESTATE);
-            boolean canManageEstate = manager || permissions.contains(EstatePermissionCode.EDIT_ESTATE);
-            boolean canViewAssets = owner;
-            boolean canInviteMembers = active && (manager || permissions.contains(EstatePermissionCode.INVITE_MEMBERS));
+            boolean canViewManagement = codes.contains(EstatePermissionCode.VIEW_ESTATE);
+            boolean canManageEstate = codes.contains(EstatePermissionCode.EDIT_ESTATE);
+            boolean canViewAssets = codes.contains(EstatePermissionCode.VIEW_ASSETS);
+            boolean canInviteMembers = active && codes.contains(EstatePermissionCode.INVITE_MEMBERS);
             boolean canManageInvitationPermissions = manager;
-            boolean canViewFaultReports = responder || permissions.contains(EstatePermissionCode.VIEW_FAULT_REPORTS);
-            boolean canRelocateFaultReports =
-                    active && (responder || permissions.contains(EstatePermissionCode.RELOCATE_FAULT_REPORTS));
-            boolean canCreateLocations =
-                    active && (manager || permissions.contains(EstatePermissionCode.CREATE_LOCATIONS));
-            boolean canCreateFloors = active && (owner || permissions.contains(EstatePermissionCode.CREATE_LOCATIONS));
-            boolean canEditLocations = active && (owner || permissions.contains(EstatePermissionCode.EDIT_LOCATIONS));
-            boolean canViewEstateRoles = manager
-                    || permissions.contains(EstatePermissionCode.CREATE_ROLES)
-                    || permissions.contains(EstatePermissionCode.EDIT_ROLES);
-            boolean canCreateRoles = active && (manager || permissions.contains(EstatePermissionCode.CREATE_ROLES));
-            boolean canEditRoles = active && (manager || permissions.contains(EstatePermissionCode.EDIT_ROLES));
+            boolean canViewFaultReports = codes.contains(EstatePermissionCode.VIEW_FAULT_REPORTS);
+            boolean canRelocateFaultReports = active && codes.contains(EstatePermissionCode.RELOCATE_FAULT_REPORTS);
+            boolean canCreateLocations = active && codes.contains(EstatePermissionCode.CREATE_LOCATIONS);
+            boolean canCreateFloors = canCreateLocations;
+            boolean canEditLocations = active && codes.contains(EstatePermissionCode.EDIT_LOCATIONS);
+            boolean canViewEstateRoles = codes.contains(EstatePermissionCode.CREATE_ROLES)
+                    || codes.contains(EstatePermissionCode.EDIT_ROLES);
+            boolean canCreateRoles = active && codes.contains(EstatePermissionCode.CREATE_ROLES);
+            boolean canEditRoles = active && codes.contains(EstatePermissionCode.EDIT_ROLES);
             boolean canDeleteRoles = active && manager;
             boolean canReassignRoles = active && manager;
-            boolean canViewEstateInvitations = manager || permissions.contains(EstatePermissionCode.INVITE_MEMBERS);
-            boolean presetDocuments =
-                    manager || "COUNCIL".equals(row.get(ESTATEUSER.ROLE)) || "CREW".equals(row.get(ESTATEUSER.ROLE));
-            boolean canViewDocuments = presetDocuments || permissions.contains(EstatePermissionCode.VIEW_DOCUMENTS);
-            boolean canUploadDocuments =
-                    active && (presetDocuments || permissions.contains(EstatePermissionCode.EDIT_DOCUMENTS));
+            boolean canViewEstateInvitations = manager || codes.contains(EstatePermissionCode.INVITE_MEMBERS);
+            boolean canViewDocuments = codes.contains(EstatePermissionCode.VIEW_DOCUMENTS);
+            boolean canUploadDocuments = active && codes.contains(EstatePermissionCode.EDIT_DOCUMENTS);
+            boolean triage = active && codes.contains(EstatePermissionCode.TRIAGE_FAULT_REPORTS);
             return new AppAccessResponse.EstateAccessResponse(
                     row.get(ESTATE.ID),
                     row.get(ESTATE.NAME),
@@ -133,19 +121,19 @@ public class AccessService {
                     canViewManagement,
                     canManageEstate,
                     canViewAssets,
-                    !resident && (owner || "COUNCIL".equals(row.get(ESTATEUSER.ROLE))),
-                    manager || "CREW".equals(row.get(ESTATEUSER.ROLE)),
-                    active && (manager || "CREW".equals(row.get(ESTATEUSER.ROLE))),
-                    canViewManagement || responder,
-                    !resident && (owner || responder),
-                    !resident && (owner || responder) && active,
+                    canViewAssets,
+                    codes.contains(EstatePermissionCode.VIEW_READINGS),
+                    active && codes.contains(EstatePermissionCode.RECORD_READINGS),
+                    !codes.isEmpty(),
+                    codes.contains(EstatePermissionCode.VIEW_INSPECTIONS),
+                    active && codes.contains(EstatePermissionCode.RECORD_INSPECTIONS),
                     canInviteMembers,
                     canManageInvitationPermissions,
                     canViewFaultReports,
                     canRelocateFaultReports,
-                    !resident && (manager || "CREW".equals(row.get(ESTATEUSER.ROLE))),
-                    manager && active,
-                    manager && active,
+                    codes.contains(EstatePermissionCode.VIEW_WORK_ORDERS),
+                    active && codes.contains(EstatePermissionCode.MANAGE_WORK_ORDERS),
+                    active && codes.contains(EstatePermissionCode.MANAGE_WORK_ORDERS),
                     row.get(ESTATEUSER.CUSTOMROLEID),
                     row.get(ESTATEROLEDEFINITION.NAME),
                     canCreateLocations,
@@ -159,11 +147,18 @@ public class AccessService {
                     canViewEstateInvitations,
                     canViewDocuments,
                     canUploadDocuments,
-                    manager && active,
-                    manager && active,
-                    // Matches EstateReportService: current MANAGER membership in an active estate.
-                    active && "MANAGER".equals(row.get(ESTATEUSER.ROLE)),
-                    active && "MANAGER".equals(row.get(ESTATEUSER.ROLE)));
+                    active && codes.contains(EstatePermissionCode.IMPORT_READINGS),
+                    active && codes.contains(EstatePermissionCode.IMPORT_READINGS),
+                    // Matches EstateReportService: TRIAGE_FAULT_REPORTS in an active estate.
+                    triage,
+                    triage,
+                    active && codes.contains(EstatePermissionCode.EDIT_ASSETS),
+                    codes.contains(EstatePermissionCode.VIEW_COSTS),
+                    codes.contains(EstatePermissionCode.VIEW_DEVICES),
+                    active && codes.contains(EstatePermissionCode.MANAGE_DEVICES),
+                    active && codes.contains(EstatePermissionCode.MANAGE_INSPECTIONS),
+                    active && codes.contains(EstatePermissionCode.PROGRESS_ASSIGNED_WORK_ORDERS),
+                    triage);
         });
         var assigned = rows.stream()
                 .filter(row -> "RESIDENT".equals(row.get(ESTATEUSER.ROLE)) && row.get(ESTATE.DEACTIVATEDAT) == null)

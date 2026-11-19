@@ -90,6 +90,42 @@ const permissions = [
     description: "Read reports and their images.",
     requires: [],
   },
+  {
+    code: "TRIAGE_FAULT_REPORTS",
+    label: "Sort fault reports",
+    description: "Change urgency and type, and handle duplicates.",
+    requires: ["VIEW_FAULT_REPORTS"],
+  },
+  {
+    code: "VIEW_ASSETS",
+    label: "View assets",
+    description: "Open the asset register.",
+    requires: [],
+  },
+  {
+    code: "VIEW_WORK_ORDERS",
+    label: "View work orders",
+    description: "List and open work orders.",
+    requires: [],
+  },
+  {
+    code: "VIEW_READINGS",
+    label: "View readings",
+    description: "See sensor readings.",
+    requires: [],
+  },
+  {
+    code: "VIEW_DEVICES",
+    label: "View devices",
+    description: "See an asset's devices.",
+    requires: [],
+  },
+  {
+    code: "VIEW_INSPECTIONS",
+    label: "View inspections",
+    description: "See inspection results.",
+    requires: [],
+  },
 ];
 const saved = {
   id: roleId,
@@ -425,6 +461,24 @@ it("shows the new-role page with details and permissions grouped by area", async
   for (const permission of permissions) {
     expect(checked(permission.label)).toBe(false);
     screen.getByText(permission.description);
+  }
+});
+
+it("groups the asset, work order, reading, device and inspection permissions by area", async () => {
+  await openNewRole();
+  await screen.findByRole("heading", { name: "Permissions" });
+  const areas: [string, string][] = [
+    ["Fault reports", "Sort fault reports"],
+    ["Assets", "View assets"],
+    ["Work orders", "View work orders"],
+    ["Readings", "View readings"],
+    ["Devices", "View devices"],
+    ["Inspections", "View inspections"],
+  ];
+  for (const [area, label] of areas) {
+    within(screen.getByRole("group", { name: area })).getByRole("checkbox", {
+      name: label,
+    });
   }
 });
 

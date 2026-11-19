@@ -426,6 +426,19 @@ it("shows crew the routing and the contractor but no decisions", async () => {
   expect(card.queryByRole("button", { name: DISMISS })).toBeNull();
 });
 
+// Crew hold TRIAGE_FAULT_REPORTS but not MANAGE_WORK_ORDERS (estate-role-permissions):
+// they may dismiss, but sending to a contractor creates a work order.
+it("lets crew dismiss a report awaiting review but not send it to a contractor", async () => {
+  state.role = "CREW";
+  state.routing = review;
+  await setup();
+  const card = await routingCard();
+
+  await card.findByRole("button", { name: DISMISS });
+  expect(card.queryByRole("button", { name: SEND })).toBeNull();
+  card.getByText("Waiting for you to decide");
+});
+
 it("shows no next step for a report submitted before routing existed", async () => {
   state.routing = null;
   await setup();

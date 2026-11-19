@@ -41,6 +41,16 @@ vi.mock("@tanstack/react-router", () => ({
 
 const page = vi.hoisted(() => ({
   asset: {} as Record<string, unknown>,
+  // Edit and Retire need EDIT_ASSETS (estate-role-permissions).
+  canEditAssets: true,
+}));
+vi.mock("@/lib/access", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/access")>()),
+  useAppAccess: () => ({
+    data: {
+      estates: [{ estateId: "estate", canEditAssets: page.canEditAssets }],
+    },
+  }),
 }));
 vi.mock("@/lib/assets", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/assets")>()),
@@ -56,6 +66,7 @@ vi.mock(
 );
 
 beforeEach(() => {
+  page.canEditAssets = true;
   page.asset = {
     id: "asset",
     estateId: "estate",
@@ -115,6 +126,16 @@ describe("AssetDetailsTab", () => {
 
   it("keeps the lifecycle history with the details", () => {
     tab();
+    screen.getByRole("heading", { name: "Lifecycle history" });
+  });
+
+  it("offers neither Edit nor Retire to someone who cannot edit assets", () => {
+    page.canEditAssets = false;
+    tab();
+    expect(screen.queryByRole("link", { name: "Edit" })).toBeNull();
+    expect(
+      screen.queryByRole("button", { name: "Take out of use" })
+    ).toBeNull();
     screen.getByRole("heading", { name: "Lifecycle history" });
   });
 

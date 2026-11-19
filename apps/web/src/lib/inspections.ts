@@ -42,8 +42,12 @@ export function useInspectionAccess(estateId: string) {
     canView: valid && !!permission?.canViewInspectionResults,
     canCreate: valid && !!permission?.canCreateInspectionResults,
     canViewAssets: valid && !!permission?.canViewAssets,
+    canViewReadings: valid && !!permission?.canViewReadings,
     canViewAssetHistory: valid && !!permission?.canViewAssetHistory,
+    canViewWorkOrders: valid && !!permission?.canViewWorkOrders,
     canCreateWorkOrders: valid && !!permission?.canCreateWorkOrders,
+    // Check schedules and generating the due list (MANAGE_INSPECTIONS).
+    canManage: valid && !!permission?.canManageInspections,
     estateName: permission?.estateName,
     pending: !session.ready || access.isPending,
   };

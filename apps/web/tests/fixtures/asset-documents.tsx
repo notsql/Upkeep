@@ -133,6 +133,8 @@ export function allow({
         canViewManagement: true,
         canManageEstate: owner,
         canViewAssets: owner,
+        // Linking documents to assets needs EDIT_ASSETS (estate-role-permissions).
+        canEditAssets: owner,
         canViewEstateDetails: true,
         canViewInspectionResults: true,
         canViewDocuments: documents,
