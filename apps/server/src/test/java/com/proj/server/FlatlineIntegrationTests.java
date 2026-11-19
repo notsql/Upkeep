@@ -1,13 +1,11 @@
 package com.proj.server;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import java.math.BigDecimal;
-import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.UUID;
@@ -33,7 +31,7 @@ import org.springframework.transaction.annotation.Transactional;
 /** ID-68's HTTP contract, including persisted policies and maintenance cutoffs. */
 @SpringBootTest(properties = "spring.security.oauth2.resourceserver.jwt.issuer-uri=https://example.authkit.app")
 @AutoConfigureMockMvc
-@Import(TestcontainersConfiguration.class)
+@Import({TestcontainersConfiguration.class, MutableClock.Config.class})
 @Transactional
 class FlatlineIntegrationTests {
     static final Instant NOW = Instant.parse("2026-10-20T04:00:00Z");
@@ -47,8 +45,8 @@ class FlatlineIntegrationTests {
     @MockitoBean
     JwtDecoder decoder;
 
-    @MockitoBean
-    Clock clock;
+    @Autowired
+    MutableClock clock;
 
     DeviceTestData data;
     UUID estateId, locationId, assetId, deviceId;
@@ -56,8 +54,7 @@ class FlatlineIntegrationTests {
 
     @BeforeEach
     void setup() {
-        when(clock.instant()).thenReturn(NOW);
-        when(clock.getZone()).thenReturn(ZoneOffset.UTC);
+        clock.set(NOW);
         data = new DeviceTestData(db);
         var ids = data.estateWithAsset("owner");
         estateId = ids[0];
@@ -200,7 +197,7 @@ class FlatlineIntegrationTests {
                 {"metric":"TEMPERATURE","unit":"°C","value":22,"measuredAt":"%s"}
                 """.formatted(NOW.plusSeconds(60))))
                 .andExpect(status().isCreated());
-        when(clock.instant()).thenReturn(NOW.plusSeconds(60));
+        clock.set(NOW.plusSeconds(60));
         review("")
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.totalElements").value(0));
@@ -373,7 +370,7 @@ class FlatlineIntegrationTests {
     void flagsStoredSensorReadingsWithoutChangingAssetConditionAndFreezesEvidenceDuringSilence() throws Exception {
         policy(2, "0").andExpect(status().isOk());
         flatline();
-        when(clock.instant()).thenReturn(NOW.plusSeconds(3600));
+        clock.set(NOW.plusSeconds(3600));
         review("")
                 .andExpect(status().isOk())
                 .andExpect(header().string("Cache-Control", "private, no-store"))
@@ -439,7 +436,7 @@ class FlatlineIntegrationTests {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.totalElements").value(0));
         reading(deviceId, "TEMPERATURE", "21.5", NOW.plusSeconds(121));
-        when(clock.instant()).thenReturn(NOW.plusSeconds(121));
+        clock.set(NOW.plusSeconds(121));
         review("?view=ALL")
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.sensors[0].state").value("MONITORING"));
@@ -456,7 +453,7 @@ class FlatlineIntegrationTests {
                 .andExpect(jsonPath("$.sensors[0].flatline.minimumValue").value(21))
                 .andExpect(jsonPath("$.sensors[0].flatline.maximumValue").value(21.01));
         reading(deviceId, "TEMPERATURE", "21.015", NOW.plusSeconds(60));
-        when(clock.instant()).thenReturn(NOW.plusSeconds(60));
+        clock.set(NOW.plusSeconds(60));
         review("")
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.totalElements").value(0));
@@ -500,7 +497,7 @@ class FlatlineIntegrationTests {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.sensors[?(@.deviceId=='" + deviceId + "')].state")
                         .value(org.hamcrest.Matchers.contains("PAUSED")));
-        when(clock.instant()).thenReturn(NOW.plusSeconds(60));
+        clock.set(NOW.plusSeconds(60));
         review("?view=ALL")
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.sensors[?(@.deviceId=='" + deviceId + "')].state")
@@ -508,7 +505,7 @@ class FlatlineIntegrationTests {
         reading(deviceId, "TEMPERATURE", "21.5", NOW.plusSeconds(30)); // late, still before cutoff
         reading(deviceId, "TEMPERATURE", "21.5", NOW.plusSeconds(60));
         reading(deviceId, "TEMPERATURE", "21.5", NOW.plusSeconds(180));
-        when(clock.instant()).thenReturn(NOW.plusSeconds(180));
+        clock.set(NOW.plusSeconds(180));
         review("?view=ALL")
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.sensors[?(@.deviceId=='" + deviceId + "')].flatline.observedDurationSeconds")

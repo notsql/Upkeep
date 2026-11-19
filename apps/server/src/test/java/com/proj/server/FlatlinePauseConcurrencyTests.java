@@ -1,15 +1,12 @@
 package com.proj.server;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import java.time.Clock;
 import java.time.Instant;
-import java.time.ZoneOffset;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
@@ -28,7 +25,7 @@ import org.springframework.test.web.servlet.MockMvc;
 /** Separate committed transactions are essential: one transaction cannot demonstrate a write race. */
 @SpringBootTest(properties = "spring.security.oauth2.resourceserver.jwt.issuer-uri=https://example.authkit.app")
 @AutoConfigureMockMvc
-@Import(TestcontainersConfiguration.class)
+@Import({TestcontainersConfiguration.class, MutableClock.Config.class})
 class FlatlinePauseConcurrencyTests {
     @Autowired
     MockMvc mvc;
@@ -39,13 +36,12 @@ class FlatlinePauseConcurrencyTests {
     @MockitoBean
     JwtDecoder decoder;
 
-    @MockitoBean
-    Clock clock;
+    @Autowired
+    MutableClock clock;
 
     @Test
     void simultaneousFirstPausesCreateOnePauseAndRejectTheOtherWithoutExtendingIt() throws Exception {
-        when(clock.instant()).thenReturn(Instant.parse("2026-10-20T04:00:00Z"));
-        when(clock.getZone()).thenReturn(ZoneOffset.UTC);
+        clock.set(Instant.parse("2026-10-20T04:00:00Z"));
         var data = new DeviceTestData(db);
         var ids = data.estateWithAsset("owner");
         var device = data.device(ids[0], ids[1], ids[2], null);
